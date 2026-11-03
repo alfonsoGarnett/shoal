@@ -1,6 +1,6 @@
 # Shoal
 
-English · [Español](README.es.md)
+English · [Español](README.es.md) · [![CI](https://github.com/alfonsoGarnett/shoal/actions/workflows/ci.yml/badge.svg)](https://github.com/alfonsoGarnett/shoal/actions/workflows/ci.yml)
 
 A small web app that runs on every device in your Tailscale network and ties them together.
 One page per device with its services, a shared clipboard, files, notifications, and a browser

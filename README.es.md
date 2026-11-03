@@ -1,6 +1,6 @@
 # Shoal
 
-[English](README.md) · Español
+[English](README.md) · Español · [![CI](https://github.com/alfonsoGarnett/shoal/actions/workflows/ci.yml/badge.svg)](https://github.com/alfonsoGarnett/shoal/actions/workflows/ci.yml)
 
 Una pequeña aplicación web que corre en cada equipo de tu red de Tailscale y los conecta entre sí:
 una página por equipo con sus servicios, un portapapeles compartido, archivos, notificaciones y una
