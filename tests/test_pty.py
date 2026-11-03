@@ -7,6 +7,7 @@ through, and ending the session from the UI closes it.
 import json
 import os
 import queue
+import re
 import sys
 import tempfile
 import threading
@@ -78,7 +79,12 @@ session = ws.texts[0]["session"]
 time.sleep(1.5)
 ws.inbox.put({"t": "i", "d": "echo PTY_RUNS\r"})
 check(wait(lambda: b"PTY_RUNS\r" in bytes(ws.out) or b"PTY_RUNS\n" in bytes(ws.out)), "a command runs and prints")
-check(any(c in bytes(ws.out) for c in (b"\x1b[1;32m", b"\x1b[01;32m")), "the prompt has colours (user@host in green)")
+# Green in any spelling: ConPTY redraws the output and older Windows builds write bold green as 92.
+GREEN = re.compile(rb"\x1b\[(?:[0-9]+;)*(?:32|92)(?:;[0-9]+)*m")
+SGR = re.compile(rb"\x1b\[[0-9;]*m")
+green = wait(lambda: GREEN.search(bytes(ws.out)), 10)
+seen = sorted(set(SGR.findall(bytes(ws.out))))  # printed on failure: what this terminal actually wrote
+check(green, "the prompt has colours (user@host in green)" + ("" if green else f": saw {seen}"))
 ws.inbox.put({"t": "r", "c": 60, "r": 20})
 ws.inbox.put(None)  # the browser goes away; the shell stays
 time.sleep(1)
