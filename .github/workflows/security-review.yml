@@ -1,0 +1,30 @@
+name: Security review
+
+# Claude Code reviews each pull request for security issues and comments on the findings.
+# Needs the repository secret CLAUDE_API_KEY (Settings > Secrets and variables > Actions).
+# The action is not hardened against prompt injection: workflows from outside contributors only
+# run after a maintainer approves them (Settings > Actions > "Require approval for all external
+# contributors").
+
+permissions:
+  pull-requests: write  # comments on the pull request
+  contents: read
+
+on:
+  pull_request:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+
+      # anthropics/claude-code-security-review, main as of 2026-02-11 (pinned: it has no releases)
+      - uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          exclude-directories: site/vendor
