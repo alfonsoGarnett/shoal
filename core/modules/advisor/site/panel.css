@@ -1,0 +1,123 @@
+/* Architect module panel (loaded only by its own page). */
+
+/* ---------- Architect: read-only systems console ---------- */
+.arch-page { background-color: var(--bg); }
+.arch-main { max-width: 1280px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right)) 80px max(16px, env(safe-area-inset-left)); }
+.arch-hero { position: relative; display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 22px; align-items: start; padding: 46px 0 30px; border-bottom: 1px solid var(--line); overflow: hidden; }
+.arch-hero::before { content: ""; position: absolute; inset: -40% 35% auto -20%; height: 360px; pointer-events: none; background: radial-gradient(closest-side, var(--accent-soft), transparent 72%); filter: blur(10px); }
+.arch-emblem { position: relative; display: grid; place-items: center; width: 64px; height: 64px; color: var(--accent); font: 600 30px/1 var(--mono); border: 1px solid var(--accent); background: color-mix(in oklab, var(--accent) 8%, transparent); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); box-shadow: 0 0 34px var(--accent-soft); animation: archGlow 5s ease-in-out infinite alternate; }
+.arch-emblem::after { content: ""; position: absolute; inset: 8px; border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent); clip-path: inherit; }
+.arch-hero-copy { min-width: 0; }
+.arch-kicker { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; font: 600 10.5px/1 var(--mono); letter-spacing: .18em; color: var(--ink-3); text-transform: uppercase; }
+.arch-live { display: inline-block; width: 6px; height: 6px; flex: none; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); animation: archPulse 2.4s ease-in-out infinite; }
+.arch-hero h1 { margin: 0; font-size: clamp(50px, 7vw, 96px); line-height: .88; letter-spacing: -.065em; font-weight: 600; }
+.arch-hero .lede { max-width: 62ch; margin: 16px 0 0; }
+.arch-hero-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; padding-top: 4px; text-align: right; }
+.arch-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--line-2); color: var(--ink-2); font: 600 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.arch-badge i { color: var(--accent); font-size: 15px; }
+.arch-meta-line { max-width: 260px; font: 500 11px/1.4 var(--mono); color: var(--ink-3); }
+.arch-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 26px; }
+.arch-side { position: sticky; top: 84px; display: grid; gap: 14px; }
+.arch-panel { padding: 18px; border: 1px solid var(--line); background: linear-gradient(155deg, var(--surface-2), var(--surface) 60%); clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+.arch-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; font: 600 10px/1.2 var(--mono); letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3); }
+.arch-state { color: var(--ink-2); letter-spacing: .02em; text-transform: none; }
+.arch-state.ready { color: var(--accent); }
+.arch-state.disabled, .arch-state.needs_config { color: var(--down); }
+.arch-state.error { color: var(--down); }
+.arch-state::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 6px; background: currentColor; }
+.arch-usage { font: 500 11.5px/1.4 var(--mono); color: var(--ink-2); }
+.arch-meter { height: 3px; margin: 12px 0 10px; background: var(--line); overflow: hidden; }
+.arch-meter i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent), #8fd13d); transition: width .8s var(--ease); }
+.arch-panel-note { font: 500 10.5px/1.5 var(--mono); color: var(--ink-3); }
+.arch-config { justify-content: center; margin-top: 14px; width: 100%; }
+.arch-chips { display: grid; gap: 8px; }
+.arch-chip { text-align: left; padding: 10px 12px; background: var(--bg-2); border: 1px solid var(--line); color: var(--ink-2); font: 500 11.5px/1.4 var(--mono); cursor: pointer; transition: border-color .25s var(--ease), color .25s var(--ease), transform .2s var(--ease); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); }
+.arch-chip:hover { border-color: var(--accent); color: var(--ink); transform: translateX(2px); }
+.arch-note { margin: 0; padding: 0 4px; font: 500 10.5px/1.55 var(--mono); color: var(--ink-3); }
+.arch-console { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 620px; overflow: hidden; background: linear-gradient(160deg, var(--surface-2), var(--surface) 55%); border: 1px solid var(--line-2); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); }
+.arch-console::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5; background: repeating-linear-gradient(180deg, transparent 0 35px, color-mix(in oklab, var(--accent) 6%, transparent) 36px, transparent 37px); mask-image: linear-gradient(180deg, #000, transparent 75%); -webkit-mask-image: linear-gradient(180deg, #000, transparent 75%); animation: archScan 12s linear infinite; }
+.arch-console-head { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 18px; border-bottom: 1px solid var(--line); background: color-mix(in oklab, var(--bg) 55%, transparent); }
+.arch-console-title { display: flex; align-items: center; gap: 9px; font: 600 10.5px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.arch-clear { display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; color: var(--ink-3); cursor: pointer; font: 500 10.5px/1 var(--mono); }
+.arch-clear:hover { color: var(--accent); }
+.arch-conversation { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; gap: 16px; min-height: 300px; max-height: 66vh; overflow: auto; padding: 24px; scroll-behavior: smooth; }
+.arch-empty { max-width: 46ch; margin: auto; padding: 34px 16px; text-align: center; color: var(--ink-2); animation: archIn .6s var(--ease); }
+.arch-empty-mark { display: grid; place-items: center; width: 48px; height: 48px; margin: 0 auto 16px; border: 1px solid var(--line-2); color: var(--accent); font-size: 24px; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+.arch-empty h2 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.03em; }
+.arch-empty p { margin: 0; font-size: 14px; color: var(--ink-3); }
+.arch-msg { display: flex; flex-direction: column; gap: 6px; max-width: 88%; animation: archIn .45s var(--ease); }
+.arch-msg.user { align-self: flex-end; align-items: flex-end; }
+.arch-msg.assistant { align-self: flex-start; align-items: flex-start; }
+.arch-msg-head { display: flex; align-items: center; gap: 10px; min-height: 16px; font: 600 10px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.arch-role { color: var(--accent); }
+.arch-msg.user .arch-role { color: var(--ink-2); }
+.arch-msg-meta { font-weight: 500; letter-spacing: .02em; text-transform: none; color: var(--ink-3); }
+.arch-copy { border: 0; background: none; padding: 2px; color: var(--ink-3); cursor: pointer; font-size: 13px; }
+.arch-copy:hover { color: var(--accent); }
+.arch-bubble { padding: 14px 16px; border: 1px solid var(--line); background: var(--bg-2); color: var(--ink); font-size: 14.5px; line-height: 1.62; overflow-wrap: anywhere; }
+.arch-msg.user .arch-bubble { border-color: var(--accent); background: var(--accent-soft); }
+.arch-msg.error .arch-bubble { border-color: var(--down); color: var(--down); background: color-mix(in oklab, var(--down) 8%, transparent); }
+.arch-body p { margin: 0 0 10px; }
+.arch-body p:last-child { margin-bottom: 0; }
+.arch-body h1, .arch-body h2, .arch-body h3, .arch-body h4 { margin: 16px 0 8px; line-height: 1.15; letter-spacing: -.02em; }
+.arch-body h1 { font-size: 24px; } .arch-body h2 { font-size: 20px; } .arch-body h3 { font-size: 17px; } .arch-body h4 { font-size: 15px; }
+.arch-body ul, .arch-body ol { margin: 0 0 10px; padding-left: 1.35em; }
+.arch-body li { margin: 4px 0; }
+.arch-body li::marker { color: var(--accent); }
+.arch-body code { padding: 2px 5px; background: var(--bg); color: var(--accent); font: 500 .88em/1.4 var(--mono); }
+.arch-body pre { margin: 0 0 12px; padding: 12px 14px; overflow: auto; background: var(--bg); border-left: 2px solid var(--accent); }
+.arch-body pre code { padding: 0; background: none; color: var(--ink); font-size: 12.5px; }
+.arch-body blockquote { margin: 0 0 12px; padding: 8px 12px; border-left: 2px solid var(--accent); color: var(--ink-2); }
+.arch-body a { color: var(--accent); }
+.arch-body hr { height: 1px; margin: 14px 0; border: 0; background: linear-gradient(90deg, var(--accent), transparent); }
+.arch-table-wrap { margin: 0 0 12px; overflow: auto; }
+.arch-body table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.arch-body th, .arch-body td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: left; }
+.arch-body th { color: var(--ink-3); font: 600 10px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.arch-thinking { display: flex; align-items: center; gap: 10px; align-self: flex-start; padding: 4px 2px; color: var(--ink-3); animation: archIn .35s var(--ease); }
+.arch-dots { display: inline-flex; gap: 4px; }
+.arch-dots i { width: 5px; height: 5px; background: var(--accent); animation: archDot 1s ease-in-out infinite; }
+.arch-dots i:nth-child(2) { animation-delay: .15s; }
+.arch-dots i:nth-child(3) { animation-delay: .3s; }
+.arch-thinking-label { font: 500 10.5px/1 var(--mono); letter-spacing: .04em; }
+.arch-composer { position: relative; z-index: 1; padding: 14px 18px 16px; border-top: 1px solid var(--line); background: color-mix(in oklab, var(--bg) 62%, transparent); }
+.arch-composer textarea { width: 100%; min-height: 76px; padding: 12px 14px; resize: vertical; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--ink); font: 400 13.5px/1.55 var(--mono); }
+.arch-composer textarea:focus { outline: 0; border-color: var(--accent); }
+.arch-composer-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.arch-hint { margin-right: auto; color: var(--ink-3); font: 500 10px/1.3 var(--mono); }
+.arch-page .foot a { color: var(--ink-2); text-decoration: none; }
+.arch-page .foot a:hover { color: var(--accent); }
+@keyframes archGlow { from { box-shadow: 0 0 22px var(--accent-soft); } to { box-shadow: 0 0 44px color-mix(in oklab, var(--accent) 22%, transparent); } }
+@keyframes archPulse { 0%, 100% { opacity: .45; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes archIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes archDot { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-2px); } }
+@keyframes archScan { from { background-position: 0 0; } to { background-position: 0 74px; } }
+@media (max-width: 900px) {
+  .arch-hero { grid-template-columns: 56px minmax(0, 1fr); gap: 16px; }
+  .arch-emblem { width: 52px; height: 52px; font-size: 24px; }
+  .arch-hero-meta { grid-column: 2; align-items: flex-start; text-align: left; padding-top: 0; }
+  .arch-layout { grid-template-columns: 1fr; }
+  .arch-console { order: -1; }
+  .arch-side { position: static; grid-template-columns: 1fr 1fr; order: 1; }
+  .arch-note { grid-column: 1 / -1; }
+  .arch-conversation { max-height: none; min-height: 360px; }
+}
+@media (max-width: 600px) {
+  .arch-hero { padding-top: 30px; }
+  .arch-hero h1 { font-size: clamp(34px, 10.5vw, 54px); }
+  .arch-side { grid-template-columns: 1fr; }
+  .arch-conversation { padding: 16px; }
+  .arch-msg { max-width: 100%; }
+  .arch-composer { padding: 12px; }
+  .arch-composer-bar .btn { flex: 1 1 auto; justify-content: center; }
+  .arch-hint { width: 100%; }
+  .arch-console { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arch-emblem, .arch-live, .arch-console::before, .arch-msg, .arch-empty, .arch-thinking, .arch-dots i { animation: none !important; }
+  .arch-conversation { scroll-behavior: auto; }
+}
+.arch-truncated { max-width: 88%; margin-top: 2px; padding: 8px 10px; border-left: 2px solid var(--down); color: var(--down); font: 500 10.5px/1.5 var(--mono); background: color-mix(in oklab, var(--down) 6%, transparent); }
+@media (max-width: 600px) { .arch-truncated { max-width: 100%; } }
+:root[data-theme="paper"] .arch-panel, :root[data-theme="paper"] .arch-chip,
+:root[data-theme="paper"] .arch-console { border-radius: 12px; }

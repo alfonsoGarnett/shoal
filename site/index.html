@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script>/* /hub without a trailing slash: relative URLs would go to the port root */ if (/\/hub$/.test(location.pathname)) location.replace(location.pathname + "/" + location.search + location.hash);</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shoal</title>
+  <meta name="description" content="Routes served by this hub on the tailnet and device status." data-i18n-content="index.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0c0b'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23c4ea6c'/%3E%3C/svg%3E">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="bar">
+    <a class="mark" href="#top" aria-label="Home" data-i18n-aria="index.ariaHome">
+      <span>shoal</span><span class="slash">/</span><span data-scramble>hub</span>
+    </a>
+    <div class="bar-meta">
+      <span class="tailnet" id="tailnet">tailnet</span>
+      <button class="refresh" id="refresh" type="button" aria-label="Refresh" data-i18n-aria="common.refresh">
+        <i class="ph ph-arrows-clockwise" aria-hidden="true"></i>
+        <span id="updated" data-scramble data-i18n="common.loading">loading</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy reveal">
+        <h1 id="host" data-scramble>Hub</h1>
+        <p class="lede" id="lede" data-scramble data-i18n="index.loading">Reading the tailnet…</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#rutas"><i class="ph ph-arrow-down-right" aria-hidden="true"></i><span data-i18n="index.routes">Routes</span></a>
+          <button class="btn btn-ghost" type="button" id="copy-ip"><i class="ph ph-copy" aria-hidden="true"></i><span>100.x.x.x</span></button>
+        </div>
+      </div>
+      <figure class="radar reveal" aria-label="Tailnet device map" data-i18n-aria="index.radar">
+        <canvas id="radar"></canvas>
+        <figcaption id="radar-cap"></figcaption>
+      </figure>
+    </section>
+
+    <section class="published" id="published" hidden aria-labelledby="published-h">
+      <h2 id="published-h">
+        <button class="section-toggle" type="button" data-collapse="published" aria-expanded="true" aria-controls="published-body">
+          <span data-i18n="index.publishedHeading">Published funnels</span><i class="ph ph-caret-down" aria-hidden="true"></i>
+        </button>
+      </h2>
+      <div id="published-body"><div id="published-list"></div></div>
+    </section>
+
+    <section class="routes" id="rutas" aria-labelledby="rutas-h">
+      <div class="section-head">
+        <h2 id="rutas-h">
+          <button class="section-toggle" type="button" data-collapse="routes" aria-expanded="true" aria-controls="routes-body">
+            <span data-i18n="index.routesHeading">Served routes</span><i class="ph ph-caret-down" aria-hidden="true"></i>
+          </button>
+        </h2>
+        <button class="link-btn" type="button" id="show-hidden" aria-pressed="false" hidden><i class="ph ph-eye-slash" aria-hidden="true"></i><span></span></button>
+      </div>
+      <div id="routes-body">
+        <div class="share-bar" id="share-bar" hidden></div>
+        <p class="sr" id="route-hint-select" data-i18n="index.cardHintSelect">Click to select for publishing. Drag or use Alt+arrows to reorder.</p>
+        <p class="sr" id="route-hint-move" data-i18n="index.cardHintMove">Drag, or Alt and the arrow keys, to reorder.</p>
+        <div class="route-grid" id="route-grid">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="devices" id="equipos" aria-labelledby="equipos-h">
+      <h2 id="equipos-h" data-i18n="index.devicesHeading">Devices</h2>
+      <ol class="device-list" id="device-list" data-fill></ol>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span id="foot-ver"></span>
+    <span><span data-i18n="index.footer">Refreshes every minute</span> · <a href="help.html" data-i18n="common.help">Help</a></span>
+  </footer>
+
+  <aside class="term" id="term" hidden aria-label="Service terminal" data-i18n-aria="index.termAria">
+    <header class="term-head">
+      <i class="ph ph-terminal-window" aria-hidden="true"></i>
+      <strong id="term-title" data-i18n="index.termTitle">service</strong>
+      <span id="term-state"></span>
+      <button class="icon-btn" type="button" id="term-close" aria-label="Close terminal" data-i18n-aria="index.termClose"><i class="ph ph-x"></i></button>
+    </header>
+    <pre class="term-out" id="term-out"></pre>
+  </aside>
+  <div class="publish-bar" id="publish-bar" role="region" aria-label="Publish" data-i18n-aria="index.publishGroup" inert>
+    <i class="ph ph-globe-hemisphere-west" aria-hidden="true"></i>
+    <span id="publish-count" aria-live="polite"></span>
+    <button class="icon-btn" type="button" id="publish-clear" aria-label="Clear selection" data-i18n-aria="index.publishClear"><i class="ph ph-x" aria-hidden="true"></i></button>
+    <button class="btn btn-primary btn-xs" type="button" id="publish-open"><i class="ph ph-upload-simple" aria-hidden="true"></i><span data-i18n="index.publishAction">Publish group</span></button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="labels.js?v=__HUB_VERSION__" defer></script>
+  <script src="hub.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# gitleaks configuration for this repository: the default rules, minus vendored third-party bundles.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Minified xterm.js: identifiers such as FourKeyMap/TwoKeyMap look like generic API keys"
+paths = ['site/vendor/xterm/']

@@ -1,0 +1,42 @@
+# Local secrets and runtime state
+.env
+.env.*
+!.env.example
+state/
+services.json
+site/data.json
+site/data.json.tmp
+RELEASE.json
+*.pem
+*.key
+*release_key*
+
+# Internal notes and scratch space
+HANDOFF.md
+CLAUDE.md
+.dev/
+.dsh/
+state-test/
+
+run-integration/
+dist/
+*.log
+*.zip
+*.tmp
+.coverage
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,15 @@
+{
+  "id": "hello",
+  "name": "Hello",
+  "version": "1.0.0",
+  "api": 1,
+  "description": "Example module: a greeting and a counter.",
+  "capabilities": ["hello"],
+  "permissions": [],
+  "panel": "modules/hello/panel.html",
+  "nav": { "icon": "ph-hand-waving", "label": "module.hello.nav" },
+  "config": {
+    "enabled": { "type": "bool", "default": false, "label": "module.hello.enabled" },
+    "greeting": { "type": "str", "default": "Hello", "max_length": 60, "label": "module.hello.greeting" }
+  }
+}

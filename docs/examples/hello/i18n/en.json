@@ -1,0 +1,10 @@
+{
+  "module.hello.name": "Hello",
+  "module.hello.description": "Example module: a greeting and a counter.",
+  "module.hello.nav": "Hello",
+  "module.hello.enabled": "Enabled",
+  "module.hello.greeting": "Greeting",
+  "hello.lede": "An example module. Its code is one folder in core/modules/.",
+  "hello.bump": "Count one more",
+  "hello.count": "Counted {n} times on {hub} since it started."
+}

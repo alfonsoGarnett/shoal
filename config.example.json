@@ -1,0 +1,8 @@
+{
+  "name": "my-hub",
+  "domain": "example.ts.net",
+  "lang": "en",
+  "priority": 50,
+  "serve_paths": ["/", "/hub"],
+  "routes": []
+}

@@ -1,0 +1,38 @@
+# NOTICE
+
+Shoal is an independent project. It is **not affiliated with, endorsed by,
+or sponsored by Tailscale Inc.**
+
+"Tailscale", "Tailnet", "MagicDNS", "Taildrop", "Serve", "Funnel", and related
+marks are trademarks of Tailscale Inc. They are used descriptively only.
+
+## Third-party assets
+
+### Geist and Geist Mono
+
+The files in `site/vendor/fonts/` are Geist and Geist Mono by Vercel.
+Licensed under the SIL Open Font License, Version 1.1.
+See `site/vendor/fonts/OFL.txt`.
+
+### Departure Mono
+
+`site/vendor/fonts/DepartureMono-Regular.woff2` is Departure Mono 1.500 by Helena Zhang.
+Licensed under the SIL Open Font License, Version 1.1.
+See `site/vendor/fonts/DepartureMono-LICENSE.txt`.
+
+### Phosphor Icons
+
+The files in `site/vendor/phosphor/` are Phosphor Icons.
+Licensed under the MIT License.
+See `site/vendor/phosphor/LICENSE.txt`.
+
+### xterm.js
+
+The files in `site/vendor/xterm/` are xterm.js 5.5.0, its fit addon 0.10.0 and its WebGL addon 0.18.0.
+Licensed under the MIT License.
+See `site/vendor/xterm/LICENSE.txt`.
+
+## Python dependencies
+
+The core requires only the Python standard library. Optional Web Push support
+uses `pywebpush` and `cryptography`; their licenses apply when installed.

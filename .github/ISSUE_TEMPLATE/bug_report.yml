@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible problem without secrets
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include real tailnet domains, IPs, API keys, tokens, state directories, or terminal output with secrets.
+        For security issues, use private vulnerability reporting instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Hub version
+      description: From api/caps or the footer
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - Linux
+        - Raspberry Pi
+        - macOS
+        - Android / Termux
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs (redacted)
+      description: Remove secrets, tokens, IPs, and personal paths.
+      render: shell

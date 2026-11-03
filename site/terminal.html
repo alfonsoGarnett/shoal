@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Terminal · Shoal</title>
+  <meta name="description" content="Tailnet remote terminal." data-i18n-content="terminal.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="vendor/xterm/xterm.css?v=__HUB_VERSION__">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body class="term-page">
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main class="tp-main">
+    <div class="tp-head">
+      <a class="back" href="control.html"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="terminal.control">Control</span></a>
+      <div class="tp-dev">
+        <label class="sr" for="dev" data-i18n="terminal.device">Device</label>
+        <select id="dev" class="select"><option value="local">Hub (PowerShell)</option></select>
+        <button class="icon-btn" type="button" id="pty-end" hidden aria-label="End session" data-i18n-aria="terminal.endSession" title="End session" data-i18n-title="terminal.endSession"><i class="ph ph-power" aria-hidden="true"></i></button>
+        <label class="ct-sync"><span data-i18n="terminal.enabled">Enabled</span>
+          <button class="switch" type="button" role="switch" id="enabled" aria-checked="false" aria-label="Enable the remote terminal on this device" data-i18n-aria="terminal.enableAria"></button>
+        </label>
+      </div>
+    </div>
+    <div class="console-bar" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span id="console-title" data-scramble>hub</span><span id="console-face"></span></div>
+    <p class="tp-hint" id="pty-hint" hidden><i class="ph ph-terminal" aria-hidden="true"></i><span></span><a href="#"></a></p>
+    <section class="tp-pty" id="pty" hidden>
+      <div class="tp-xterm" id="xterm"></div>
+      <button class="tp-latest" id="pty-latest" type="button" hidden><i class="ph ph-arrow-down" aria-hidden="true"></i><span data-i18n="terminal.latest">Latest output</span></button>
+      <div class="tp-status" id="pty-status" role="status" hidden><span></span><button class="btn btn-ghost btn-xs" type="button" id="pty-action" hidden></button></div>
+      <div class="tp-keys" id="keys" role="toolbar" aria-label="Extra keys" data-i18n-aria="terminal.keys">
+        <button type="button" data-key="esc">Esc</button>
+        <button type="button" data-key="tab">Tab</button>
+        <button type="button" data-key="ctrl" aria-pressed="false">Ctrl</button>
+        <button type="button" data-key="alt" aria-pressed="false">Alt</button>
+        <button type="button" data-key="fn" aria-pressed="false">Fn</button>
+        <span class="tp-set" data-set="main">
+          <button type="button" data-key="^c" aria-label="Ctrl+C">^C</button>
+          <button type="button" data-key="left" aria-label="←">←</button>
+          <button type="button" data-key="up" aria-label="↑">↑</button>
+          <button type="button" data-key="down" aria-label="↓">↓</button>
+          <button type="button" data-key="right" aria-label="→">→</button>
+          <button type="button" data-key="^d" aria-label="Ctrl+D">^D</button>
+          <button type="button" data-key="^z" aria-label="Ctrl+Z">^Z</button>
+          <button type="button" data-key="|">|</button>
+          <button type="button" data-key="~">~</button>
+          <button type="button" data-key="/">/</button>
+          <button type="button" data-key="-">-</button>
+        </span>
+        <span class="tp-set" data-set="fn" hidden>
+          <button type="button" data-key="f1">F1</button><button type="button" data-key="f2">F2</button>
+          <button type="button" data-key="f3">F3</button><button type="button" data-key="f4">F4</button>
+          <button type="button" data-key="f5">F5</button><button type="button" data-key="f6">F6</button>
+          <button type="button" data-key="f7">F7</button><button type="button" data-key="f8">F8</button>
+          <button type="button" data-key="f9">F9</button><button type="button" data-key="f10">F10</button>
+          <button type="button" data-key="f11">F11</button><button type="button" data-key="f12">F12</button>
+          <button type="button" data-key="home">Home</button><button type="button" data-key="end">End</button>
+          <button type="button" data-key="pgup">PgUp</button><button type="button" data-key="pgdn">PgDn</button>
+          <button type="button" data-key="ins">Ins</button><button type="button" data-key="del">Del</button>
+        </span>
+      </div>
+    </section>
+    <pre class="tp-out" id="out" aria-live="polite"></pre>
+    <form class="tp-in" id="form" autocomplete="off">
+      <label class="tp-prompt" for="cmd" id="prompt">PS&gt;</label>
+      <input id="cmd" type="text" spellcheck="false" autocapitalize="off" placeholder="type a command" data-i18n-placeholder="terminal.commandPlaceholder" disabled>
+      <button class="btn btn-primary" type="submit" id="run" disabled><i class="ph ph-arrow-elbow-down-left" aria-hidden="true"></i><span class="hide-sm" data-i18n="terminal.run">Run</span></button>
+    </form>
+  </main>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="vendor/xterm/xterm.js?v=__HUB_VERSION__" defer></script>
+  <script src="vendor/xterm/addon-fit.js?v=__HUB_VERSION__" defer></script>
+  <script src="vendor/xterm/addon-webgl.js?v=__HUB_VERSION__" defer></script>
+  <script src="terminal.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

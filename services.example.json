@@ -1,0 +1,17 @@
+{
+  "_comment": "Example service catalogue. Copy to services.json and edit. Never commit the real file if it contains private paths.",
+  "routes": {
+    "3000/": {
+      "name": "Example web app",
+      "about": "A local development server controlled by the hub.",
+      "icon": "ph-globe",
+      "featured": true,
+      "project": "/path/to/project",
+      "control": {
+        "cwd": "/path/to/project",
+        "cmd": ["python", "-m", "http.server", "3000"],
+        "ports": [3000]
+      }
+    }
+  }
+}

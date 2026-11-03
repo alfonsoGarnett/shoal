@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Device · Shoal</title>
+  <meta name="description" content="Features of a tailnet device, through its hub." data-i18n-content="nodo.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main>
+    <a class="back" href="./"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="common.index">Index</span></a>
+    <section class="page-head">
+      <h1 id="name" data-scramble data-i18n="nodo.heading">Device</h1>
+      <p class="lede" id="lede" data-scramble data-i18n="nodo.connecting">Connecting to the hub…</p>
+    </section>
+
+    <div class="ct-grid">
+      <section class="nd-stat frame"><div class="in">
+        <div id="bat-box"><span class="pp-label" data-i18n="nodo.battery">Battery</span>
+        <div class="pp-tnum" id="bat">-<small>%</small></div>
+        <div class="pp-file" id="bat-sub"></div></div>
+        <span class="pp-label" style="margin-top:12px" data-i18n="nodo.storage">Free storage</span>
+        <div class="pp-file" id="disk">-</div>
+      </div></section>
+
+      <section class="nd-clip frame" id="sec-clip"><div class="in">
+        <h2><i class="ph ph-clipboard-text" aria-hidden="true"></i><span data-i18n="nodo.clipboard">Device clipboard</span></h2>
+        <textarea id="clip" rows="4" placeholder="Read the device clipboard or type to put it there" data-i18n-placeholder="nodo.clipPlaceholder"></textarea>
+        <div class="ct-row">
+          <button class="btn btn-ghost" type="button" id="clip-get"><i class="ph ph-download-simple" aria-hidden="true"></i><span data-i18n="nodo.read">Read</span></button>
+          <button class="btn btn-primary" type="button" id="clip-set"><i class="ph ph-upload-simple" aria-hidden="true"></i><span data-i18n="nodo.put">Put on device</span></button>
+        </div>
+        <p class="ct-sub" style="margin:0" id="clip-note" hidden data-i18n="nodo.androidClip">Android only allows clipboard reads while the app is in the foreground.</p>
+      </div></section>
+
+      <section class="nd-ping frame" id="sec-ping"><div class="in">
+        <h2><i class="ph ph-bell-ringing" aria-hidden="true"></i><span data-i18n="nodo.notify">Notify on device</span></h2>
+        <input class="select" id="msg" type="text" placeholder="Message" data-i18n-placeholder="nodo.message" style="height:46px">
+        <div class="ct-row">
+          <button class="btn btn-primary" type="button" data-ping="notify"><i class="ph ph-bell" aria-hidden="true"></i><span data-i18n="nodo.notification">Notification</span></button>
+          <button class="btn btn-ghost" type="button" data-ping="toast"><i class="ph ph-chat-text" aria-hidden="true"></i><span data-i18n="nodo.toast">Toast</span></button>
+          <button class="btn btn-ghost" type="button" data-ping="vibrate"><i class="ph ph-vibrate" aria-hidden="true"></i><span data-i18n="nodo.vibrate">Vibrate</span></button>
+        </div>
+      </div></section>
+
+      <section class="nd-files frame"><div class="in">
+        <div class="ct-head">
+          <h2><i class="ph ph-folder-open" aria-hidden="true"></i><span data-i18n="nodo.files">Files</span></h2>
+          <div class="fb-actions">
+            <button class="icon-btn" type="button" id="fb-hidden" aria-pressed="false" aria-label="Show hidden files" data-i18n-aria="nodo.showHidden" title="Show hidden files" data-i18n-title="nodo.showHidden"><i class="ph ph-eye-slash" aria-hidden="true"></i></button>
+            <label class="btn btn-ghost nd-up"><i class="ph ph-upload-simple" aria-hidden="true"></i><span data-i18n="nodo.upload">Upload here</span><input type="file" id="up" multiple></label>
+          </div>
+        </div>
+        <div class="fb">
+          <aside class="fb-side">
+            <p class="fb-label" data-i18n="nodo.locations">Locations</p>
+            <ul class="fb-roots" id="fb-roots" data-fill></ul>
+            <p class="fb-label fb-tree-label" data-i18n="nodo.folders">Folders</p>
+            <ul class="fb-tree" id="fb-tree" role="tree" aria-label="Folders" data-i18n-aria="nodo.folders"></ul>
+          </aside>
+          <div class="fb-main">
+            <div class="fb-bar">
+              <button class="icon-btn" type="button" id="fb-up" aria-label="Up one level" data-i18n-aria="nodo.upLevel" title="Up one level" data-i18n-title="nodo.upLevel"><i class="ph ph-arrow-up" aria-hidden="true"></i></button>
+              <nav class="crumbs" id="crumbs" aria-label="Path" data-i18n-aria="nodo.path"></nav>
+            </div>
+            <p class="fb-note" id="fb-note" hidden></p>
+            <ol class="files" id="files" data-fill></ol>
+          </div>
+        </div>
+      </div></section>
+    </div>
+  </main>
+
+  <footer class="foot"><span id="foot" data-i18n="nodo.footerAgent">Device hub</span><span data-i18n="nodo.footerIdentity">Through the hub, with your Tailscale identity</span></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="nodo.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

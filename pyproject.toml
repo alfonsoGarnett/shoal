@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shoal-hub"
+version = "0.1.0a0"
+description = "One small web app on every device of your Tailscale network: services, shared clipboard, files, terminals, with no central server."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Alfonso Garnett and contributors" }]
+keywords = ["tailscale", "tailnet", "self-hosted", "crdt", "homeserver"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Homepage = "https://github.com/alfonsoGarnett/shoal"
+Issues = "https://github.com/alfonsoGarnett/shoal/issues"
+Changelog = "https://github.com/alfonsoGarnett/shoal/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+push = ["pywebpush", "cryptography"]
+
+[tool.setuptools]
+py-modules = ["federation", "push", "shares", "clipboard"]
+
+[tool.setuptools.packages.find]
+include = ["core*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"

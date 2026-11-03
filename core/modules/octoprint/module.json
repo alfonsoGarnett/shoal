@@ -1,0 +1,88 @@
+{
+  "id": "octoprint",
+  "name": "OctoPrint",
+  "version": "1.0.0",
+  "api": 1,
+  "description": "Optional 3D printer dashboard and safe controls through OctoPrint.",
+  "capabilities": [
+    "printer"
+  ],
+  "permissions": [
+    "network"
+  ],
+  "panel": "modules/octoprint/panel.html",
+  "nav": {
+    "icon": "ph-printer",
+    "label": "module.octoprint.nav"
+  },
+  "aliases": [
+    "printer.html"
+  ],
+  "events": {
+    "print_done": {
+      "label": "Print finished",
+      "about": "When a print completes successfully.",
+      "default": true
+    },
+    "print_error": {
+      "label": "Printer error",
+      "about": "Firmware errors such as thermal runaway.",
+      "default": true
+    },
+    "print_cancelled": {
+      "label": "Print stopped",
+      "about": "Cancelled or interrupted before finishing.",
+      "default": true
+    },
+    "print_started": {
+      "label": "Print started",
+      "about": "Every time a job starts.",
+      "default": false
+    },
+    "print_progress": {
+      "label": "Progress 25/50/75%",
+      "about": "Milestones with the remaining time.",
+      "default": false
+    },
+    "octoprint_down": {
+      "label": "OctoPrint down",
+      "about": "When the service stops responding, and when it returns.",
+      "default": true
+    }
+  },
+  "config": {
+    "enabled": {
+      "type": "bool",
+      "default": false,
+      "label": "module.octoprint.enabled"
+    },
+    "url": {
+      "type": "url",
+      "default": "http://127.0.0.1:5000",
+      "label": "module.octoprint.url"
+    },
+    "api_key": {
+      "type": "secret",
+      "default": "",
+      "label": "module.octoprint.api_key"
+    },
+    "snapshot_url": {
+      "type": "url",
+      "default": "",
+      "label": "module.octoprint.snapshot_url"
+    },
+    "port": {
+      "type": "str",
+      "default": "",
+      "label": "module.octoprint.port",
+      "max_length": 128
+    },
+    "baudrate": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 1000000,
+      "label": "module.octoprint.baudrate"
+    }
+  }
+}

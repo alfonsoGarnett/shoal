@@ -1,0 +1,27 @@
+/* OctoPrint module panel (loaded only by its own page). */
+
+.pp-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-top: 32px; }
+.pp-status { grid-column: span 7; }
+.pp-temp { grid-column: span 5; }
+.pp-cam { grid-column: span 7; }
+.pp-job { grid-column: span 5; }
+@media (max-width: 900px) { .pp-status, .pp-temp, .pp-cam, .pp-job { grid-column: 1 / -1; } }
+.pp-grid .in { padding: 24px; height: 100%; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(160deg, var(--surface-2), var(--surface) 55%); }
+.pp-state { font-size: clamp(30px, 4vw, 48px); font-weight: 600; letter-spacing: -.035em; line-height: 1; }
+.pp-state.err { color: var(--down); }
+.pp-pct { font: 600 clamp(64px, 11vw, 140px)/.85 var(--mono); letter-spacing: -.06em; }
+.pp-pct small { font-size: .3em; letter-spacing: 0; color: var(--ink-3); }
+.pp-bar { height: 4px; background: var(--accent); width: 0; transition: width .8s var(--ease); }
+.pp-times { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 6px 32px; font: 500 13px/1.4 var(--mono); color: var(--ink-2); }
+.pp-times b { display: block; font-size: 20px; color: var(--ink); font-weight: 600; letter-spacing: -.02em; }
+.pp-error { font: 500 14px/1.5 var(--mono); color: var(--down); }
+.pp-spark { width: 100%; height: 120px; display: block; margin-top: auto; }
+.pp-cam .in { padding: 0; overflow: hidden; }
+.pp-cam img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: var(--bg-2); }
+.pp-cam .cam-empty { aspect-ratio: 16 / 9; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--ink-3); font: 500 13px/1.5 var(--mono); }
+.pp-cam .cam-empty i { font-size: 34px; display: block; margin-bottom: 8px; }
+.pp-kv { display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; font: 500 13px/1.4 var(--mono); }
+.pp-kv dt { color: var(--ink-3); } .pp-kv dd { margin: 0; color: var(--ink); word-break: break-all; }
+.pp-actions { grid-column: 1 / -1; }
+.pp-actions .in { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pp-actions .pp-label { margin-right: 8px; }

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../../">  <!-- module panel: shared assets and APIs resolve from the hub root -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Printer · Shoal</title>
+  <meta name="description" content="Live printer status in OctoPrint." data-i18n-content="printer.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <link rel="stylesheet" href="modules/octoprint/panel.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main>
+    <a class="back" href="./"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="common.index">Index</span></a>
+    <section class="page-head">
+      <h1 data-i18n="module.octoprint.nav">Printer</h1>
+      <p class="lede" id="lede" data-scramble data-i18n="printer.connecting">Connecting to OctoPrint…</p>
+    </section>
+
+    <div class="pp-grid">
+      <article class="pp-status frame"><div class="in">
+        <span class="pp-label" data-i18n="printer.status">Status</span>
+        <div class="pp-state" id="state">…</div>
+        <div class="pp-file" id="file"></div>
+        <div class="pp-pct" id="pct">-<small>%</small></div>
+        <div class="pp-bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="pp-times">
+          <div><span data-i18n="printer.elapsed">elapsed</span><b id="t-el">-</b></div>
+          <div><span data-i18n="printer.remaining">remaining</span><b id="t-left">-</b></div>
+          <div><span data-i18n="printer.eta">finishes</span><b id="t-eta">-</b></div>
+        </div>
+        <div class="pp-error" id="err" hidden></div>
+      </div></article>
+
+      <article class="pp-temp frame"><div class="in">
+        <span class="pp-label" data-i18n="printer.hotend">Hotend</span>
+        <div class="pp-tnum" id="temp">-<small>°C</small></div>
+        <div class="pp-file" id="target" data-i18n="printer.heaterOff">heater off</div>
+        <canvas class="pp-spark" id="spark" aria-label="Temperature over the last 30 minutes" data-i18n-aria="printer.tempAria"></canvas>
+      </div></article>
+
+      <article class="pp-actions frame"><div class="in" id="pp-actions">
+        <span class="pp-label" data-i18n="printer.actions">Actions</span>
+        <button class="btn btn-ghost" type="button" data-pa="connect"><i class="ph ph-plugs-connected" aria-hidden="true"></i><span data-i18n="printer.connect">Connect</span></button>
+        <button class="btn btn-ghost" type="button" data-pa="pause"><i class="ph ph-pause" aria-hidden="true"></i><span data-i18n="printer.pause">Pause / resume</span></button>
+        <button class="btn btn-ghost" type="button" data-pa="cancel" data-confirm-i18n="printer.cancelConfirm"><i class="ph ph-stop" aria-hidden="true"></i><span data-i18n="printer.cancel">Cancel</span></button>
+        <button class="btn btn-ghost" type="button" data-pa="cooldown"><i class="ph ph-snowflake" aria-hidden="true"></i><span data-i18n="printer.cooldown">Cool down</span></button>
+        <button class="btn btn-ghost" type="button" data-pa="motors_off"><i class="ph ph-arrows-out-cardinal" aria-hidden="true"></i><span data-i18n="printer.motors">Release motors</span></button>
+        <button class="btn btn-ghost" type="button" data-pa="disconnect" data-confirm-i18n="printer.disconnectConfirm"><i class="ph ph-plugs" aria-hidden="true"></i><span data-i18n="printer.disconnect">Disconnect</span></button>
+      </div></article>
+
+      <article class="pp-cam frame"><div class="in" id="cam">
+        <div class="cam-empty"><span><i class="ph ph-video-camera-slash" aria-hidden="true"></i><span data-i18n="printer.noCamera">The camera is not sending an image.</span></span></div>
+      </div></article>
+
+      <article class="pp-job frame"><div class="in">
+        <span class="pp-label" data-i18n="printer.details">Details</span>
+        <dl class="pp-kv">
+          <dt data-i18n="printer.connection">connection</dt><dd id="k-conn">-</dd>
+          <dt data-i18n="printer.estimate">estimate</dt><dd id="k-est">-</dd>
+          <dt data-i18n="printer.filament">filament</dt><dd id="k-fil">-</dd>
+          <dt data-i18n="printer.updated">updated</dt><dd id="k-upd">-</dd>
+        </dl>
+      </div></article>
+    </div>
+  </main>
+
+  <footer class="foot"><span data-i18n="printer.footerHeat">Heating is not available here: do it in OctoPrint next to the printer.</span><span data-i18n="printer.footerRefresh">Refreshes every 3 s</span></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="modules/octoprint/panel.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

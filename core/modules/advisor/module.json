@@ -1,0 +1,70 @@
+{
+  "id": "advisor",
+  "name": "Architect",
+  "version": "0.2.0",
+  "api": 1,
+  "description": "Read-only assistant for the hub mesh.",
+  "capabilities": [
+    "advisor"
+  ],
+  "permissions": [
+    "network",
+    "fleet-read"
+  ],
+  "panel": "modules/advisor/panel.html",
+  "aliases": [
+    "advisor.html"
+  ],
+  "config": {
+    "enabled": {
+      "type": "bool",
+      "default": false,
+      "label": "module.advisor.enabled"
+    },
+    "base_url": {
+      "type": "url",
+      "default": "https://api.openai.com/v1",
+      "label": "module.advisor.base_url"
+    },
+    "model": {
+      "type": "str",
+      "default": "gpt-4o-mini",
+      "label": "module.advisor.model",
+      "max_length": 200
+    },
+    "api_key": {
+      "type": "secret",
+      "default": "",
+      "label": "module.advisor.api_key"
+    },
+    "max_tokens": {
+      "type": "int",
+      "default": 4000,
+      "min": 64,
+      "max": 4000,
+      "label": "module.advisor.max_tokens"
+    },
+    "daily_requests": {
+      "type": "int",
+      "default": 50,
+      "min": 1,
+      "max": 10000,
+      "label": "module.advisor.daily_requests"
+    },
+    "language": {
+      "type": "select",
+      "default": "auto",
+      "options": [
+        "auto",
+        "en",
+        "es"
+      ],
+      "label": "module.advisor.language"
+    },
+    "include_logs": {
+      "type": "bool",
+      "default": false,
+      "label": "module.advisor.include_logs"
+    }
+  }
+}

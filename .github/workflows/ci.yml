@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Python ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Compile Python
+        run: python -m compileall -q core tools federation.py push.py shares.py clipboard.py
+      - name: Unit tests
+        run: python tests/test_unit.py
+      - name: Interactive shells (PTY / ConPTY)
+        run: python tests/test_pty.py
+      - name: JavaScript syntax
+        shell: bash
+        run: |
+          for f in site/*.js core/modules/*/site/*.js docs/examples/*/site/*.js; do node --check "$f"; done
+      - name: Installer syntax (sh)
+        if: runner.os != 'Windows'
+        run: sh -n site/install.sh
+      - name: Installer syntax (PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: $null = [scriptblock]::Create((Get-Content -Raw site/install-windows.ps1))
+
+  integration:
+    name: Two-hub mesh on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Optional dependencies (push, native Ed25519)
+        run: python -m pip install --quiet pywebpush cryptography
+      - name: Isolated integration
+        run: python tests/test_mesh.py
+
+  hygiene:
+    name: Nothing private or secret in the tree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Secret and private-data scan
+        run: python tools/export_public.py --check --home /nonexistent unused

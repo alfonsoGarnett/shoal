@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../../">  <!-- module panel: shared assets and APIs resolve from the hub root -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Architect · Shoal</title>
+  <meta name="description" content="Read-only assistant for the hub mesh." data-i18n-content="advisor.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <link rel="stylesheet" href="modules/advisor/panel.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body class="arch-page">
+  <div class="grain" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main class="arch-main">
+    <a class="back" href="control.html"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="advisor.back">Control</span></a>
+
+    <section class="arch-hero">
+      <div class="arch-emblem" aria-hidden="true"><span>A</span></div>
+      <div class="arch-hero-copy">
+        <div class="arch-kicker"><span class="arch-live" aria-hidden="true"></span><span data-i18n="advisor.kicker">READ-ONLY ASSISTANT</span></div>
+        <h1 data-i18n="advisor.head">Architect</h1>
+        <p class="lede" data-i18n="advisor.lede">Ask what changed, what is failing, or what to check next.</p>
+      </div>
+      <div class="arch-hero-meta">
+        <span class="arch-badge"><i class="ph ph-eye" aria-hidden="true"></i><span data-i18n="advisor.readOnly">Read-only</span></span>
+        <span class="arch-meta-line" id="arch-model"></span>
+      </div>
+    </section>
+
+    <div class="arch-layout">
+      <aside class="arch-side">
+        <section class="arch-panel">
+          <div class="arch-panel-head">
+            <span data-i18n="advisor.status">Status</span>
+            <span class="arch-state" id="arch-state">…</span>
+          </div>
+          <div class="arch-usage" id="arch-usage"></div>
+          <div class="arch-meter" aria-hidden="true"><i id="arch-meter"></i></div>
+          <div class="arch-panel-note" data-i18n="advisor.readOnlyNote">Cannot run commands or change settings.</div>
+          <a class="btn btn-ghost arch-config" href="modules.html" id="arch-config" hidden><i class="ph ph-puzzle-piece" aria-hidden="true"></i><span data-i18n="advisor.configure">Configure</span></a>
+        </section>
+
+        <section class="arch-panel">
+          <div class="arch-panel-head"><span data-i18n="advisor.suggestions">Try asking</span></div>
+          <div class="arch-chips" id="arch-chips">
+            <button type="button" class="arch-chip" data-prompt="advisor.suggestion.1"></button>
+            <button type="button" class="arch-chip" data-prompt="advisor.suggestion.2"></button>
+            <button type="button" class="arch-chip" data-prompt="advisor.suggestion.3"></button>
+            <button type="button" class="arch-chip" data-prompt="advisor.suggestion.4"></button>
+          </div>
+        </section>
+
+        <p class="arch-note" data-i18n="advisor.privacy">Receives device names, status, and service health. Recent logs are included only when enabled, with secrets removed.</p>
+      </aside>
+
+      <section class="arch-console" aria-label="Architect session">
+        <header class="arch-console-head">
+          <div class="arch-console-title"><span class="arch-live" aria-hidden="true"></span><span data-i18n="advisor.session">Session</span></div>
+          <button class="arch-clear" type="button" id="arch-clear"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i><span data-i18n="advisor.newSession">New session</span></button>
+        </header>
+
+        <div class="arch-conversation" id="conversation" aria-live="polite">
+          <div class="arch-empty" id="arch-empty">
+            <div class="arch-empty-mark" aria-hidden="true"><i class="ph ph-asterisk"></i></div>
+            <h2 data-i18n="advisor.emptyTitle">No messages yet</h2>
+            <p data-i18n="advisor.emptyText">Pick a question on the left or write your own below.</p>
+          </div>
+        </div>
+
+        <form class="arch-composer" id="ask-form">
+          <label class="sr" for="question" data-i18n="advisor.question">Question</label>
+          <textarea id="question" rows="3" placeholder="What needs attention right now?" data-i18n-placeholder="advisor.placeholder"></textarea>
+          <div class="arch-composer-bar">
+            <span class="arch-hint" data-i18n="advisor.composerHint">Enter to send · Shift+Enter for a new line</span>
+            <button class="btn btn-ghost" type="button" id="summary"><i class="ph ph-list-checks" aria-hidden="true"></i><span data-i18n="advisor.summary">Summarize fleet</span></button>
+            <button class="btn btn-primary" type="submit" id="ask"><i class="ph ph-paper-plane-right" aria-hidden="true"></i><span data-i18n="advisor.ask">Ask</span></button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot"><span data-i18n="advisor.footer">Read-only assistant</span><span data-i18n="control.footerIdentity">Identity verified by Tailscale</span><a href="help.html" data-i18n="common.help">Help</a></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="modules/advisor/panel.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

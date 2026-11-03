@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Control · Shoal</title>
+  <meta name="description" content="Shared clipboard, Taildrop, device actions, exit node and tailnet monitor." data-i18n-content="control.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main>
+    <a class="back" href="./"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="control.backIndex">Index</span></a>
+    <section class="page-head">
+      <h1 data-i18n="control.head">Control</h1>
+      <p class="lede" data-i18n="control.lede">What your devices share, and what this hub can do.</p>
+    </section>
+
+    <div class="ct-grid">
+      <h3 class="ct-group"><span class="idx">/ 01</span><span data-i18n="control.groupEveryday">Everyday</span></h3>
+
+      <!-- clipboard -->
+      <section class="ct-clip frame" aria-labelledby="clip-h" data-cap="clipboard"><div class="in">
+        <div class="ct-head">
+          <h2 id="clip-h"><i class="ph ph-clipboard-text" aria-hidden="true"></i><span data-i18n="control.clipboard">Clipboard</span></h2>
+          <label class="ct-sync"><span id="clip-sync-label" data-i18n="control.clipSync">Sync with this device</span>
+            <button class="switch" type="button" role="switch" id="clip-sync" aria-checked="true" aria-label="Sync with this device's clipboard" data-i18n-aria="control.clipSyncAria"></button>
+          </label>
+        </div>
+        <form id="clip-form" class="ct-clip-form">
+          <label class="sr" for="clip-text" data-i18n="control.clipboard">Clipboard</label>
+          <textarea id="clip-text" rows="3" placeholder="Paste or type here and share it with all your devices" data-i18n-placeholder="control.clipPlaceholder"></textarea>
+          <div class="ct-row">
+            <button class="btn btn-primary" type="submit"><i class="ph ph-share-network" aria-hidden="true"></i><span data-i18n="control.share">Share</span></button>
+            <button class="btn btn-ghost" type="button" id="clip-paste"><i class="ph ph-clipboard" aria-hidden="true"></i><span data-i18n="control.paste">Paste from this device</span></button>
+          </div>
+        </form>
+        <div class="clip-keep" id="clip-keep">
+          <i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>
+          <label for="clip-max" data-i18n="control.clipKeep">Keep the last</label>
+          <select id="clip-max" class="select"></select>
+          <label for="clip-age" data-i18n="control.clipFor">for</label>
+          <select id="clip-age" class="select"></select>
+        </div>
+        <ol class="clip-list" id="clip-list" data-fill></ol>
+      </div></section>
+
+      <!-- taildrop -->
+      <section class="ct-drop frame" aria-labelledby="drop-h" data-cap="taildrop"><div class="in">
+        <h2 id="drop-h"><i class="ph ph-paper-plane-tilt" aria-hidden="true"></i><span data-i18n="control.taildrop">Send files</span></h2>
+        <p class="ct-sub" data-i18n="control.taildropText">Sends the file with Taildrop.</p>
+        <label class="drop" id="drop">
+          <input type="file" id="drop-input" multiple>
+          <i class="ph ph-upload-simple" aria-hidden="true"></i>
+          <span id="drop-label" data-i18n="control.drop">Drop files here or tap to choose</span>
+        </label>
+        <div class="ct-row">
+          <label class="sr" for="drop-to" data-i18n="control.to">Destination</label>
+          <select id="drop-to" class="select"></select>
+          <button class="btn btn-primary" type="button" id="drop-send" disabled><i class="ph ph-paper-plane-right" aria-hidden="true"></i><span data-i18n="control.send">Send</span></button>
+        </div>
+        <ol class="drop-list" id="drop-list"></ol>
+      </div></section>
+
+      <!-- actions + exit node -->
+      <section class="ct-act frame" aria-labelledby="act-h"><div class="in">
+        <h2 id="act-h"><i class="ph ph-lightning" aria-hidden="true"></i><span data-i18n="control.actions">This device</span></h2>
+        <div class="act-row" id="pc-actions" data-cap="pc_actions"></div>
+        <a class="btn btn-ghost" href="terminal.html" data-cap="terminal" style="align-self:flex-start"><i class="ph ph-terminal-window" aria-hidden="true"></i><span data-i18n="control.terminalRemote">Remote terminal</span></a>
+        <div class="ct-exit" data-cap="exitnode">
+          <div>
+            <strong data-i18n="control.exitNode">Exit node</strong>
+            <p class="ct-sub" id="exit-note" data-i18n="control.exitNote">Your devices can reach the internet through this device.</p>
+          </div>
+          <button class="switch" type="button" role="switch" id="exit" aria-checked="false" aria-label="Offer this device as an exit node" data-i18n-aria="control.exitAria"></button>
+        </div>
+      </div></section>
+
+      <h3 class="ct-group"><span class="idx">/ 02</span><span data-i18n="control.groupNetwork">Network</span></h3>
+
+      <!-- hub mesh -->
+      <section class="ct-net frame" aria-labelledby="net-h" data-cap="mesh"><div class="in">
+        <div class="ct-head">
+          <h2 id="net-h"><i class="ph ph-graph" aria-hidden="true"></i><span data-i18n="control.network">Hub mesh</span></h2>
+          <span class="net-meta" id="net-meta"></span>
+        </div>
+        <p class="ct-sub" data-i18n="control.networkText">Every hub has the full list of hubs. The online one with the highest priority sends notifications and keeps the clipboard; if it goes away, the next one takes over.</p>
+        <div class="net" id="net" aria-live="polite" data-fill></div>
+        <details class="net-add">
+          <summary><i class="ph ph-plus" aria-hidden="true"></i><span data-i18n="control.addDevice">Add a device to the mesh</span></summary>
+          <p class="ct-sub" data-i18n="control.addDeviceText">Run this on the new device, with Tailscale connected.</p>
+          <div class="net-cmd"><span data-i18n="control.windows">Windows · PowerShell</span><code id="cmd-win"></code><button class="icon-btn" type="button" data-copy="cmd-win" aria-label="Copy Windows command" data-i18n-aria="control.copyWin"><i class="ph ph-copy" aria-hidden="true"></i></button></div>
+          <div class="net-cmd"><span data-i18n="control.unix">Linux, Raspberry Pi, macOS</span><code id="cmd-sh"></code><button class="icon-btn" type="button" data-copy="cmd-sh" aria-label="Copy Linux or macOS command" data-i18n-aria="control.copyUnix"><i class="ph ph-copy" aria-hidden="true"></i></button></div>
+          <div class="net-cmd"><span data-i18n="control.android">Android · Termux (with Termux:API and Termux:Boot)</span><code id="cmd-tx"></code><button class="icon-btn" type="button" data-copy="cmd-tx" aria-label="Copy Termux command" data-i18n-aria="control.copyTermux"><i class="ph ph-copy" aria-hidden="true"></i></button></div>
+          <p class="ct-sub" data-i18n-html="control.priorityHint">For an always-on device that should coordinate the mesh, prefix <code>HUB_PRIORITY=100</code>.</p>
+        </details>
+      </div></section>
+
+      <!-- federated catalog -->
+      <section class="ct-cat frame" aria-labelledby="cat-h" data-cap="catalog"><div class="in">
+        <h2 id="cat-h"><i class="ph ph-compass" aria-hidden="true"></i><span data-i18n="control.catalog">Network services</span></h2>
+        <p class="ct-sub" data-i18n="control.catalogText">Each service opens from the hub that answers fastest.</p>
+        <div class="cat-list" id="catalog" aria-live="polite" data-fill></div>
+      </div></section>
+
+      <!-- replicated files -->
+      <section class="ct-blob frame" aria-labelledby="blob-h" data-cap="blobs"><div class="in">
+        <div class="ct-head">
+          <h2 id="blob-h"><i class="ph ph-hard-drives" aria-hidden="true"></i><span data-i18n="control.blobs">Network files</span></h2>
+          <span class="net-meta" id="blob-meta"></span>
+        </div>
+        <p class="ct-sub" data-i18n="control.blobsText">Kept on more than one hub, so they survive one going down.</p>
+        <ol class="blob-list" id="blobs" aria-live="polite" data-fill></ol>
+        <label class="drop drop-sm" id="blob-drop">
+          <input type="file" id="blob-input" multiple>
+          <i class="ph ph-upload-simple" aria-hidden="true"></i>
+          <span data-i18n="control.uploadBlob">Upload a file to the mesh</span>
+        </label>
+      </div></section>
+
+      <!-- monitor -->
+      <section class="ct-mon frame" aria-labelledby="mon-h" data-cap="monitor"><div class="in">
+        <h2 id="mon-h"><i class="ph ph-pulse" aria-hidden="true"></i><span data-i18n="control.monitor">Devices, last 24 h</span></h2>
+        <div id="monitor" class="mon" data-fill></div>
+      </div></section>
+
+      <details class="ct-fold" id="fold-advanced">
+        <summary><span class="idx">/ 03</span><span data-i18n="control.groupAdvanced">Advanced</span><span class="fold-hint" data-i18n="control.groupAdvancedHint">Approvals, other tailnets, modules</span><i class="ph ph-caret-down" aria-hidden="true"></i></summary>
+        <div class="ct-fold-body">
+          <!-- quorum approvals -->
+          <section class="ct-appr frame" id="aprobaciones" aria-labelledby="appr-h" data-cap="approvals"><div class="in">
+            <div class="ct-head">
+              <h2 id="appr-h"><i class="ph ph-seal-check" aria-hidden="true"></i><span data-i18n="control.approvals">Approvals</span></h2>
+              <span class="net-meta" id="appr-meta"></span>
+            </div>
+            <p class="ct-sub" data-i18n="control.approvalsText">Turning on the terminal, removing a hub and shutting down a device need confirmation from another hub. If too few hubs are online, the quorum drops.</p>
+            <div class="appr-list" id="appr-list" aria-live="polite" data-fill></div>
+            <details class="net-add">
+              <summary><i class="ph ph-users-three" aria-hidden="true"></i><span data-i18n="control.quorum">Quorum per action</span></summary>
+              <div class="quorum" id="quorum"></div>
+              <p class="ct-sub" data-i18n="control.quorumText">1 = you decide alone. 2 or 3 = one or two other hubs confirm in Control › Approvals.</p>
+            </details>
+          </div></section>
+
+          <!-- other tailnets -->
+          <section class="ct-peer frame" aria-labelledby="peer-h" data-cap="peering"><div class="in">
+            <h2 id="peer-h"><i class="ph ph-globe-hemisphere-west" aria-hidden="true"></i><span data-i18n="control.peers">Other tailnets</span></h2>
+            <p class="ct-sub" data-i18n="control.peersText">Pair with someone else's tailnet to share services and files. Code is never shared.</p>
+            <div class="peer-list" id="peers" aria-live="polite" data-fill></div>
+            <details class="net-add">
+              <summary><i class="ph ph-plugs-connected" aria-hidden="true"></i><span data-i18n="control.pair">Pair a tailnet</span></summary>
+              <p class="ct-sub" data-i18n-html="control.pairText">On the other hub, run <code>python -m core --peer-invite --url URL_OF_THAT_HUB</code> and paste the invitation here.</p>
+              <textarea id="peer-invite" rows="4" placeholder="Paste the signed invitation (JSON)" data-i18n-placeholder="control.pairPlaceholder"></textarea>
+              <div class="ct-row">
+                <button class="btn btn-primary" type="button" id="peer-add"><i class="ph ph-link" aria-hidden="true"></i><span data-i18n="control.addTailnet">Add tailnet</span></button>
+                <button class="btn btn-ghost" type="button" id="peer-copy"><i class="ph ph-copy" aria-hidden="true"></i><span data-i18n="control.copyInvite">Copy my invitation</span></button>
+              </div>
+            </details>
+          </div></section>
+
+          <!-- modules -->
+          <section class="ct-mod frame" aria-labelledby="mod-h" data-cap="modules"><div class="in">
+            <h2 id="mod-h"><i class="ph ph-puzzle-piece" aria-hidden="true"></i><span data-i18n="control.modules">Modules</span></h2>
+            <p class="ct-sub" data-i18n="control.modulesText">Optional features. Turn on only what this device needs.</p>
+            <div class="ct-row">
+              <a class="btn btn-primary" href="modules.html"><i class="ph ph-puzzle-piece" aria-hidden="true"></i><span data-i18n="control.modulesManage">Manage modules</span></a>
+              <span id="mod-panels" class="ct-row"></span>
+            </div>
+          </div></section>
+        </div>
+      </details>
+
+      <details class="ct-fold" id="fold-settings">
+        <summary><span class="idx">/ 04</span><span data-i18n="control.groupSettings">Settings</span><span class="fold-hint" data-i18n="control.groupSettingsHint">Appearance, hub name, public login</span><i class="ph ph-caret-down" aria-hidden="true"></i></summary>
+        <div class="ct-fold-body">
+          <section class="ct-name frame" aria-labelledby="appear-h"><div class="in">
+            <h2 id="appear-h"><i class="ph ph-palette" aria-hidden="true"></i><span data-i18n="control.appearance">Appearance</span></h2>
+            <p class="ct-sub" data-i18n="control.appearanceText">Theme and mascots apply to all your hubs; language is per device. ⌘K / Ctrl+K jumps to any hub, terminal or service.</p>
+            <div class="appear-row">
+              <div class="theme-pick" id="theme-pick" role="radiogroup" aria-label="Theme" data-i18n-aria="control.theme">
+                <button type="button" role="radio" data-theme-pick="acid"><span class="swatch" data-sw="acid"><i></i><i></i></span><span data-i18n="theme.acid">Acid</span></button>
+                <button type="button" role="radio" data-theme-pick="abyss"><span class="swatch" data-sw="abyss"><i></i><i></i></span><span data-i18n="theme.abyss">Abyss</span></button>
+                <button type="button" role="radio" data-theme-pick="paper"><span class="swatch" data-sw="paper"><i></i><i></i></span><span data-i18n="theme.paper">Paper</span></button>
+              </div>
+              <label class="sr" for="lang-select" data-i18n="common.language">Language</label>
+              <select id="lang-select" class="select lang-select" aria-label="Language" data-i18n-aria="common.language">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+              <label class="ct-sync"><span data-i18n="control.pixel">Pixel type</span>
+                <button class="switch" type="button" role="switch" id="pixel" aria-checked="true" aria-label="Pixel type" data-i18n-aria="control.pixelAria"></button>
+              </label>
+              <label class="ct-sync"><span data-i18n="control.mascots">Pixel mascots</span>
+                <button class="switch" type="button" role="switch" id="mascots" aria-checked="true" aria-label="Pixel mascots" data-i18n-aria="control.mascotsAria"></button>
+              </label>
+            </div>
+          </div></section>
+
+          <section class="ct-name frame" aria-labelledby="rel-h"><div class="in">
+            <h2 id="rel-h"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i><span data-i18n="control.release">Version and updates</span></h2>
+            <p class="ct-sub" id="rel-info" data-fill></p>
+            <div class="ct-row">
+              <button class="btn btn-primary" type="button" id="rel-apply" hidden><i class="ph ph-arrow-circle-up" aria-hidden="true"></i><span data-i18n="control.applyNow">Apply the new code now</span></button>
+              <button class="btn btn-ghost" type="button" id="rel-rollback" hidden><i class="ph ph-arrow-u-up-left" aria-hidden="true"></i><span data-i18n="control.rollback">Go back to the previous version</span></button>
+              <label class="ct-sync"><span data-i18n="control.updatesPaused">Pause updates on this hub</span>
+                <button class="switch" type="button" role="switch" id="rel-pause" aria-checked="false" aria-label="Pause updates on this hub" data-i18n-aria="control.updatesPaused"></button>
+              </label>
+            </div>
+          </div></section>
+
+          <section class="ct-name frame" aria-labelledby="name-h"><div class="in">
+            <h2 id="name-h"><i class="ph ph-identification-card" aria-hidden="true"></i><span data-i18n="control.hubName">Hub name</span></h2>
+            <p class="ct-sub" data-i18n="control.hubNameText">The name other hubs see, and this device's Tailscale name. Changing it recreates the Serve routes and reloads the page. Stop public links first.</p>
+            <form id="hub-name-form" class="ct-row">
+              <label class="sr" for="hub-name" data-i18n="control.hubName">Hub name</label>
+              <input id="hub-name" class="select" maxlength="48" autocomplete="off" required>
+              <button class="btn btn-primary" type="submit"><i class="ph ph-check" aria-hidden="true"></i><span data-i18n="control.hubNameSave">Save name</span></button>
+            </form>
+          </div></section>
+
+          <section class="ct-name frame" aria-labelledby="public-auth-h"><div class="in">
+            <h2 id="public-auth-h"><i class="ph ph-key" aria-hidden="true"></i><span data-i18n="control.publicLogin">Public login</span></h2>
+            <p class="ct-sub" data-i18n="control.publicLoginText">The login in front of this hub's public links. Changing it signs out current visitors.</p>
+            <form id="public-auth-form" class="ct-row">
+              <label class="sr" for="public-auth-user" data-i18n="control.publicLoginUser">Public login user</label>
+              <input id="public-auth-user" class="select" maxlength="64" autocomplete="username" required>
+              <label class="sr" for="public-auth-password" data-i18n="control.publicLoginPassword">Public login password</label>
+              <input id="public-auth-password" class="select" type="password" maxlength="256" autocomplete="new-password" placeholder="Leave blank to keep the current password" data-i18n-placeholder="control.publicLoginKeep">
+              <button class="btn btn-primary" type="submit"><i class="ph ph-check" aria-hidden="true"></i><span data-i18n="control.publicLoginSave">Save login</span></button>
+            </form>
+            <p class="ct-sub" id="public-auth-note"></p>
+          </div></section>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <footer class="foot"><span data-i18n="control.footerOwner">Only the tailnet owner can use these features</span><span data-i18n="control.footerIdentity">Identity verified by Tailscale</span><a href="help.html" data-i18n="common.help">Help</a></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="labels.js?v=__HUB_VERSION__" defer></script>
+  <script src="control.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>

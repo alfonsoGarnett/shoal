@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Help · Shoal</title>
+  <meta name="description" content="Commands for this hub, ready to paste." data-i18n-content="help.description">
+  <meta name="theme-color" content="#0a0c0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eceee8" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="vendor/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <link rel="stylesheet" href="hub.css?v=__HUB_VERSION__">
+  <script src="theme.js?v=__HUB_VERSION__"></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="mark" href="./" aria-label="Back to index" data-i18n-aria="control.backIndex"><span>shoal</span><span class="slash">/</span><span data-scramble>hub</span></a>
+    <div class="bar-meta">
+    </div>
+  </header>
+
+  <main>
+    <a class="back" href="./"><i class="ph ph-arrow-left" aria-hidden="true"></i><span data-i18n="common.index">Index</span></a>
+    <section class="page-head">
+      <h1 data-i18n="help.head">Help</h1>
+      <p class="lede" data-i18n="help.lede">Commands for this hub, ready to paste. Click one to copy it.</p>
+    </section>
+
+    <section class="cli" aria-labelledby="h-this">
+      <h2 id="h-this" data-i18n="help.thisHub">This hub</h2>
+      <dl class="help-facts" id="facts" data-fill></dl>
+    </section>
+
+    <section class="cli" aria-labelledby="h-daily">
+      <h2 id="h-daily" data-i18n="help.daily">On this device</h2>
+      <p data-i18n="help.dailyText">Run these in a terminal on the device itself.</p>
+      <div class="help-cmds" id="daily" data-fill></div>
+    </section>
+
+    <section class="cli" aria-labelledby="h-update">
+      <h2 id="h-update" data-i18n="help.updates">Updates</h2>
+      <p id="update-text"></p>
+      <div class="help-cmds" id="updates" data-fill></div>
+    </section>
+
+    <section class="cli" aria-labelledby="h-ts">
+      <h2 id="h-ts" data-i18n="help.cli">Tailscale</h2>
+      <p id="ts-text"></p>
+      <div class="help-cmds" id="tailscale" data-fill></div>
+    </section>
+
+    <section class="cli" aria-labelledby="h-add">
+      <h2 id="h-add" data-i18n="help.add">Add another device</h2>
+      <p data-i18n="help.addText">Run the one for its system on the new device, with Tailscale connected. It downloads Shoal from this hub and joins the mesh.</p>
+      <div class="help-cmds" id="add" data-fill></div>
+    </section>
+
+    <section class="cli" aria-labelledby="h-fix">
+      <h2 id="h-fix" data-i18n="help.fix">If something is wrong</h2>
+      <ul class="help-list" id="fix"></ul>
+    </section>
+
+    <section class="cli" aria-labelledby="funnel-h">
+      <h2 id="funnel-h" data-i18n="help.funnel">Public links</h2>
+      <p data-i18n="help.funnelText">Share a service with the globe button. It goes public through Tailscale Funnel on port 8443 or 10000, behind a link that expires and an optional password. Nothing else becomes public.</p>
+    </section>
+
+    <section class="cli" aria-labelledby="modules-h">
+      <h2 id="modules-h" data-i18n="help.modules">Modules</h2>
+      <p data-i18n="help.modulesText">Modules stay off until you turn them on in Control › Modules. To add one, put its folder in core/modules/ on the hub that signs your updates.</p>
+      <a class="btn btn-primary" href="modules.html"><i class="ph ph-puzzle-piece" aria-hidden="true"></i><span data-i18n="control.modulesManage">Manage modules</span></a>
+    </section>
+  </main>
+
+  <footer class="foot"><span data-i18n="control.footerOwner">Only the tailnet owner can use these features</span><span data-i18n="control.footerIdentity">Identity verified by Tailscale</span></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="scramble.js?v=__HUB_VERSION__" defer></script>
+  <script src="i18n.js?v=__HUB_VERSION__" defer></script>
+  <script src="help.js?v=__HUB_VERSION__" defer></script>
+  <script src="mascot.js?v=__HUB_VERSION__" defer></script>
+  <script src="fleet.js?v=__HUB_VERSION__" defer></script>
+  <script src="palette.js?v=__HUB_VERSION__" defer></script>
+</body>
+</html>
