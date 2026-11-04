@@ -515,19 +515,19 @@ from core.adapters import funnel as _funnel  # noqa: E402
 class _FakeHandler:
     """Just enough of BaseHTTPRequestHandler for the Funnel gate."""
 
-    def __init__(self, body=b"", length=None, peer="127.0.0.1", xff=None):
+    def __init__(self, body=b"", length=None, peer="127.0.0.1", xff=None, command="POST", path="/__login"):
         self.headers = {"Content-Length": str(len(body) if length is None else length)}
         if xff:
             self.headers["X-Forwarded-For"] = xff
         self.client_address = (peer, 50000)
-        self.rfile, self.wfile, self.command = io.BytesIO(body), io.BytesIO(), "POST"
-        self.status, self.close_connection = None, False
+        self.rfile, self.wfile, self.command, self.path = io.BytesIO(body), io.BytesIO(), command, path
+        self.status, self.close_connection, self.sent = None, False, {}
 
     def send_response(self, code, msg=None):
         self.status = code
 
     def send_header(self, k, v):
-        pass
+        self.sent[k] = v
 
     def end_headers(self):
         pass
@@ -573,6 +573,35 @@ g = _gate()
 for i in range(_funnel.LOGIN_TRACKED + 50):
     g._note_failure(f"10.{i >> 16 & 255}.{i >> 8 & 255}.{i & 255}", time.time())
 check(len(g.login_failures) <= _funnel.LOGIN_TRACKED, "funnel: the failure table stays bounded under a scan")
+
+# After the login, back to the page that was asked for (a deep link), never off the hub.
+_sn = _funnel.Impl._safe_next
+check(_sn("/clip?id=1793811594.08-pfkx77") == "/clip?id=1793811594.08-pfkx77", "funnel: next keeps a same-hub path with its query")
+for _bad in ("//evil.example/x", "https://evil.example/", "/\\evil.example", "javascript:alert(1)", "evil.example",
+             "/a\r\nSet-Cookie: x=1", "/__login", "/__login?x=1", "", None, "/" + "a" * 3000):
+    check(_sn(_bad) == "/", "funnel: next refuses %r" % (str(_bad)[:30],))
+_lp = _gate()
+h = _FakeHandler(command="GET", path="/clip?id=abc")
+_lp._login_page(h)
+check(b'name="next" value="/clip?id=abc"' in h.wfile.getvalue(), "funnel: the login page remembers the deep link")
+h = _FakeHandler(command="GET", path='/x?a="><script>')
+_lp._login_page(h)
+check(b"<script>" not in h.wfile.getvalue(), "funnel: the remembered link is HTML-escaped in the form")
+h = _FakeHandler(b"user=owner&password=x&next=%2Fclip%3Fid%3Dabc")
+_lp._handle_login(h)
+check(h.status == 401 and b'value="/clip?id=abc"' in h.wfile.getvalue(), "funnel: a wrong password keeps the deep link")
+_good = _gate()
+_good.public_auth = {"user": "owner", "salt": "00", "iterations": 1,
+                     "hash": __import__("hashlib").pbkdf2_hmac("sha256", b"pw", b"\x00", 1).hex()}
+h = _FakeHandler(b"user=owner&password=pw&next=%2Fclip%3Fid%3Dabc")
+_good._handle_login(h)
+check(h.status == 303 and h.sent.get("Location") == "/clip?id=abc", "funnel: a good login returns to the deep link")
+h = _FakeHandler(b"user=owner&password=pw&next=https%3A%2F%2Fevil.example%2F")
+_good._handle_login(h)
+check(h.status == 303 and h.sent.get("Location") == "/", "funnel: a good login never redirects off the hub")
+h = _FakeHandler(b"user=owner&password=pw")
+_good._handle_login(h)
+check(h.status == 303 and h.sent.get("Location") == "/", "funnel: no next still lands on / as before")
 
 check(disk_room(tmp, 1) is None, "uploads: a small file fits")
 check("not enough disk space" in (disk_room(tmp, 1 << 60) or ""), "uploads: a file bigger than the free disk is refused")

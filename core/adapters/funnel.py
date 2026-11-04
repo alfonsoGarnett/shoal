@@ -185,8 +185,30 @@ class Impl(Adapter):
                 return tag
         return "en"
 
-    def _login_page(self, h, error=""):
-        """`error`: the key of a message in the catalogs (wrong, busy, invalid, unconfigured)."""
+    @staticmethod
+    def _safe_next(value):
+        """The page to return to after the login, or "/".
+
+        Only a path on this same hub qualifies: it starts with one "/", has no
+        scheme or host, no backslash and no control characters. Anything else
+        ("//evil.example", "https://…", "/\\…") would turn the login into an
+        open redirect, so it falls back to "/" as before."""
+        if not isinstance(value, str) or not value.startswith("/") or len(value) > 2048:
+            return "/"
+        if value.startswith("//") or "\\" in value or any(ord(c) < 32 or ord(c) == 127 for c in value):
+            return "/"
+        parts = urllib.parse.urlsplit(value)
+        if parts.scheme or parts.netloc or parts.path.startswith("/__login"):
+            return "/"
+        return value
+
+    def _login_page(self, h, error="", next_path=None):
+        """`error`: the key of a message in the catalogs (wrong, busy, invalid, unconfigured).
+        `next_path`: where to go after a good login; by default the page that was asked for
+        (a deep link such as a notification's clip keeps working through the login)."""
+        if next_path is None:
+            next_path = getattr(h, "path", "/") if getattr(h, "command", "GET") in ("GET", "HEAD") else "/"
+        next_path = self._safe_next(next_path)
         lang = self._visitor_lang(h)
         t = login_text(lang)
         msg = ('<p class="err">%s</p>' % html.escape(t.get(error, error))) if error else ""
@@ -207,11 +229,12 @@ button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:9px;backgr
 <form method="post" action="/__login">
 <label for="u">__USER__</label><input id="u" name="user" autocomplete="username" required>
 <label for="p">__PASSWORD__</label><input id="p" name="password" type="password" autocomplete="current-password" required>
+<input type="hidden" name="next" value="__NEXT__">
 <button type="submit">__SUBMIT__</button></form>
 </main></body></html>"""
         for key, value in (("__LANG__", lang), ("__TITLE__", t.get("title", "Log in")), ("__LEDE__", t.get("lede", "")),
                            ("__USER__", t.get("user", "User")), ("__PASSWORD__", t.get("password", "Password")),
-                           ("__SUBMIT__", t.get("submit", "Log in"))):
+                           ("__SUBMIT__", t.get("submit", "Log in")), ("__NEXT__", next_path)):
             body = body.replace(key, html.escape(value))
         body = body.replace("__ERROR__", msg)  # last: msg is already HTML
         raw = body.encode("utf-8")
@@ -237,18 +260,19 @@ button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:9px;backgr
             form = urllib.parse.parse_qs(raw.decode("utf-8", "replace"))
             user = (form.get("user") or [""])[0]
             password = (form.get("password") or [""])[0]
+            next_path = self._safe_next((form.get("next") or ["/"])[0])
         except Exception:
-            self._login_page(h, "invalid")
+            self._login_page(h, "invalid", "/")
             return
         # Failure brake per Internet client, so a bot elsewhere cannot lock the owner out.
         ip = self._visitor_ip(h)
         now = time.time()
         rec = self.login_failures.get(ip) or {"until": 0}
         if rec["until"] > now:
-            self._login_page(h, "busy")
+            self._login_page(h, "busy", next_path)
             return
         if not self.login_checks.acquire(timeout=5):  # many clients at once: shed load, do not queue
-            self._login_page(h, "busy")
+            self._login_page(h, "busy", next_path)
             return
         try:
             good = self._password_ok(user, password)
@@ -256,7 +280,7 @@ button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:9px;backgr
             self.login_checks.release()
         if not good:
             self._note_failure(ip, now)
-            self._login_page(h, "wrong")
+            self._login_page(h, "wrong", next_path)
             return
         self.login_failures.pop(ip, None)
         token = secrets.token_urlsafe(24)
@@ -264,7 +288,7 @@ button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:9px;backgr
             self.sessions[token] = now + SESSION_TTL
         h.send_response(303)
         h.send_header("Set-Cookie", f"{AUTH_COOKIE}={token}; Path=/; Max-Age={SESSION_TTL}; Secure; HttpOnly; SameSite=Lax")
-        h.send_header("Location", "/")
+        h.send_header("Location", next_path)
         h.send_header("Content-Length", "0")
         h.end_headers()
 
