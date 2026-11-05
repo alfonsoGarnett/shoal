@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Renaming a hub no longer leaves its old name on the other hubs.** The renamed hub dropped the old directory key instead of marking it removed, so the rest of the mesh kept showing the old name as an offline hub (and gossip could bring it back). The old name now stays as a tombstone that spreads like any other removal.
+- **Removing a hub always goes through the approval quorum.** Whether the quorum can be skipped is decided only by the hub's own code after the approvals agree, never by the request.
+
 ## 0.1.0-alpha (2026-11-03)
 
 First public alpha of **Shoal**.

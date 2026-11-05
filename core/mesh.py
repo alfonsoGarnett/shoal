@@ -534,7 +534,12 @@ class Mesh:
         A hub name is also its directory key. Renaming by only adding the new
         key leaves the old key behind as an offline/removed server and can make
         the current hub inherit an old tombstone. This migrates the entry and
-        clears aliases that belong to the same identity.
+        marks the aliases that belong to the same identity as removed.
+
+        The aliases stay in the directory as tombstones: other hubs only learn
+        that an old name is gone from a newer "removed" stamp. Dropping the key
+        instead left every other hub with the old name for good, and gossip
+        brought it back here as well.
         """
         new = str(new or "").strip()
         if not new:
@@ -552,7 +557,13 @@ class Mesh:
                 same_identity = entry.get("pub") == self.identity.pub_b64
                 same_address = bool(ip and entry.get("ip") == ip)
                 if same_identity or same_address:
-                    self.dir.pop(name, None)
+                    if not entry.get("removed"):
+                        tomb = dict(entry)
+                        tomb["hlc"] = dict(entry.get("hlc") or {})
+                        tomb["removed"] = True
+                        tomb["updated"] = time.time()
+                        tomb["hlc"]["removed"] = self.hlc.tick()
+                        self.dir[name] = tomb
                     self.alive.pop(name, None)
                     self.remote.pop(name, None)
             base["name"] = new
@@ -1609,7 +1620,7 @@ class Mesh:
             self.send_message(n, "approval", p)
 
     def _exec_remove(self, args):
-        self.set_hub(args.get("name"), {"remove": True, "skip_quorum": True})
+        self.set_hub(args.get("name"), {"remove": True}, approved=True)
         return {"ok": True, "removed": args.get("name")}
 
     def _suspects(self):
@@ -1791,10 +1802,12 @@ class Mesh:
         res = self.approvals.request("mesh_remove", {"name": name}, self.me, by)
         if not res.get("approved"):
             return {"pending": res, "need": res.get("need"), "view": self.view()}
-        return self.set_hub(name, {"remove": True, "skip_quorum": True})
+        return self.set_hub(name, {"remove": True}, approved=True)
 
-    def set_hub(self, name, body, by=""):
-        if body.get("remove") and not body.get("skip_quorum"):
+    def set_hub(self, name, body, by="", approved=False):
+        """Changes a hub's entry. Removing one needs the approval quorum: `approved` is only set by
+        this hub's own code after the quorum agreed, never from a request."""
+        if body.get("remove") and not approved:
             res = self.approvals.request("mesh_remove", {"name": name}, self.me, by)
             if not res.get("approved"):
                 return {"pending": res, "need": res.get("need"), "view": self.view()}
