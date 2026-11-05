@@ -7,6 +7,7 @@
 - **Renaming a hub no longer leaves its old name on the other hubs.** The renamed hub dropped the old directory key instead of marking it removed, so the rest of the mesh kept showing the old name as an offline hub (and gossip could bring it back). The old name now stays as a tombstone that spreads like any other removal.
 - **Removing a hub always goes through the approval quorum.** Whether the quorum can be skipped is decided only by the hub's own code after the approvals agree, never by the request.
 - **The devices list recognizes hubs whose name differs from the device's Tailscale hostname.** A hub named "Galaxy Watch" on the device `galaxy-watch` was shown with an "Install hub" button on the other hubs. The fleet now carries each hub's tailnet address and DNS name, and the page also matches by the host in the hub's URL.
+- **Renaming a hub with DNS waits for Tailscale to switch hostnames before recreating Serve routes.** Recreating `tailscale serve` before `Self.DNSName` updated (or while rolling back after a cold Let's Encrypt certificate took longer than 25 s) could leave Serve bound to the wrong hostname and the hub unreachable. Shoal now waits for the target DNS name before restoring Serve in both directions and allows 90 s for the first certificate.
 
 ## 0.1.0-alpha (2026-11-03)
 

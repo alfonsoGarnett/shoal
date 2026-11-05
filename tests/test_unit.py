@@ -874,6 +874,82 @@ _fh = _fa.fleet()["hubs"][0]
 check(_fh["ip"] == "100.64.0.5" and _fh["dns"] == "galaxy-watch.tailnet-a.ts.net",
       "fleet: hubs carry their tailnet address and DNS name")
 
+# Changing a hub's Tailscale hostname waits for the new DNS name before recreating Serve routes
+# (and again on rollback), and allows 90 s for a cold first certificate.
+check(_server._wait_hub.__defaults__ == (90,), "rename: _wait_hub allows 90 s for cold certificate issuance")
+_orig_ts = (_server._ts_self, _server._serve_snapshot, _server._serve_restore,
+            _server._run_ts, _server._wait_hub, _server.save_conf)
+try:
+    _dns_queue = ["galaxy-watch.tailnet-a.ts.net",
+                  "galaxy-watch.tailnet-a.ts.net",  # still old right after `tailscale set --hostname`
+                  "watch-two.tailnet-a.ts.net"]
+    _cur_dns = ["galaxy-watch.tailnet-a.ts.net"]
+    _restored_on = []
+
+    def _fake_ts_self():
+        if _dns_queue:
+            _cur_dns[0] = _dns_queue.pop(0)
+        return {"Peer": {}}, {}, _cur_dns[0], _cur_dns[0].split(".")[0]
+
+    _server._ts_self = _fake_ts_self
+    _server._serve_snapshot = lambda: [{"port": 443, "path": "/hub", "target": "http://127.0.0.1:8790"}]
+    _server._serve_restore = lambda routes: _restored_on.append(_cur_dns[0])
+    _server._run_ts = lambda *a, **k: (0, "")
+    _server._wait_hub = lambda url, seconds=90: True
+    _server.save_conf = lambda c: None
+    _rcore = types.SimpleNamespace(
+        owners=set(), by_name={}, adapters=(), req=_th.local(),
+        conf={"name": "Galaxy Watch", "master": "https://huba.tailnet-a.ts.net/hub/",
+              "self_dns": "galaxy-watch.tailnet-a.ts.net",
+              "self_url": "http://galaxy-watch.tailnet-a.ts.net:8790/hub/"},
+        ctx={"name": "Galaxy Watch", "req": _th.local()},
+        identity=types.SimpleNamespace(pub_b64="P1", name="Galaxy Watch"),
+        approvals=types.SimpleNamespace(set_me=lambda n: None),
+        mesh=types.SimpleNamespace(
+            owners=set(), known=set(), dir={}, trusted_ips=lambda: set(),
+            note_unknown=lambda ip: None, verify_hub=lambda h: None,
+            rename_self=lambda old, new: None,
+        ),
+    )
+    _RH = _server.make_handler(_rcore)
+
+    def _post_name(body_dict, sleep_fn):
+        _old_sleep = _server.time.sleep
+        _server.time.sleep = sleep_fn
+        try:
+            raw = json.dumps(body_dict).encode()
+            h = _RH.__new__(_RH)
+            h.client_address, h.command, h.path = ("127.0.0.1", 1), "POST", "/hub/api/hub/name"
+            h.headers = {"Host": "127.0.0.1:8790", "Content-Length": str(len(raw))}
+            h.rfile = io.BytesIO(raw)
+            out = {}
+            h._json = lambda d, code=200: out.update(status=code, body=d)
+            h.do_POST()
+            return out
+        finally:
+            _server.time.sleep = _old_sleep
+
+    _r1 = _post_name({"name": "Watch Two", "change_dns": True}, lambda s: None)
+    check(_r1.get("status") == 200 and _restored_on == ["watch-two.tailnet-a.ts.net"]
+          and _rcore.conf.get("self_url") == "https://watch-two.tailnet-a.ts.net/hub/",
+          "rename: Serve routes are recreated only after Tailscale reports the new DNS name")
+
+    # Rollback when the new hostname does not become healthy must also wait for the old DNS name before
+    # recreating Serve, so Serve is never left pointing at the failed hostname.
+    _rcore.conf["name"] = _rcore.ctx["name"] = "Galaxy Watch"
+    _dns_queue[:] = ["galaxy-watch.tailnet-a.ts.net",
+                     "watch-two.tailnet-a.ts.net",
+                     "watch-two.tailnet-a.ts.net",  # still new right after rollback `tailscale set --hostname`
+                     "galaxy-watch.tailnet-a.ts.net"]
+    _restored_on.clear()
+    _server._wait_hub = lambda url, seconds=90: "galaxy-watch" in url
+    _r2 = _post_name({"name": "Watch Two", "change_dns": True}, lambda s: None)
+    check(_r2.get("status") == 502 and _restored_on == ["watch-two.tailnet-a.ts.net", "galaxy-watch.tailnet-a.ts.net"],
+          "rename: rollback waits for the previous DNS name before restoring Serve routes")
+finally:
+    (_server._ts_self, _server._serve_snapshot, _server._serve_restore,
+     _server._run_ts, _server._wait_hub, _server.save_conf) = _orig_ts
+
 
 class _GotoHandler:
     def __init__(self, path):
