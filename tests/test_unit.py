@@ -844,7 +844,7 @@ _rq = _mesh()
 _rq.save = lambda: None
 _rq.coordinator = lambda: None
 _rq.view = lambda: {"view": True}
-_rq.dir["Old"] = {"name": "Old", "ip": "100.64.0.8", "domain": "tailnet-a.ts.net"}
+_rq.dir["Old"] = {"name": "Old", "ip": "100.64.0.7", "domain": "tailnet-a.ts.net"}
 _asked = []
 _rq.approvals = types.SimpleNamespace(request=lambda kind, args, me, by: _asked.append(kind) or
                                       {"approved": False, "need": 2})
