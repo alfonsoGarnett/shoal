@@ -817,6 +817,49 @@ except PermissionError:
     _taken = False
 check(not _taken, "enroll: another device cannot take over a hub's name and key")
 
+# Renaming a hub must tell the other hubs that the old name is gone (a tombstone, not a dropped key).
+_rn = _mesh()
+_rn.identity = Identity(tmp / "rename-ident")
+_rn.save = lambda: None
+_rn.coordinator = lambda: None
+_rn.refresh_self = lambda force=False: None
+_rn.view = lambda: {}
+_rn.dir["localhost"] = {"name": "localhost", "pub": _rn.identity.pub_b64, "ip": "100.64.0.5",
+                        "domain": "tailnet-a.ts.net", "hlc": {"removed": _rn.hlc.tick()}}
+_peer = _mesh()
+_peer.dir["localhost"] = json.loads(json.dumps(_rn.dir["localhost"]))  # what the others knew before
+_rn.rename_self("localhost", "Galaxy Watch")
+check(_rn.dir["localhost"].get("removed") is True and _rn.dir["Galaxy Watch"].get("removed") is False,
+      "rename: the old name stays as a tombstone and the new one is live")
+_peer.merge(json.loads(json.dumps(_rn.dir)))
+check(_peer.dir["localhost"].get("removed") is True and not _peer.dir["Galaxy Watch"].get("removed"),
+      "rename: other hubs learn that the old name is gone")
+_rn.merge({"localhost": {**_peer.dir["localhost"], "removed": False,
+                         "hlc": {"removed": "0000000000000:0000:Old"}}})
+check(_rn.dir["localhost"].get("removed") is True,
+      "rename: an older copy of the old name gossiped back does not revive it")
+
+# Removing a hub always goes through the approval quorum: a request cannot ask to skip it.
+_rq = _mesh()
+_rq.save = lambda: None
+_rq.coordinator = lambda: None
+_rq.view = lambda: {"view": True}
+_rq.dir["Old"] = {"name": "Old", "ip": "100.64.0.8", "domain": "tailnet-a.ts.net"}
+_asked = []
+_rq.approvals = types.SimpleNamespace(request=lambda kind, args, me, by: _asked.append(kind) or
+                                      {"approved": False, "need": 2})
+_res = _rq.set_hub("Old", {"remove": True, "skip_quorum": True})
+check("pending" in _res and _asked == ["mesh_remove"] and not _rq.dir["Old"].get("removed"),
+      "approvals: a request cannot skip the quorum to remove a hub")
+_ad = _mesh_adapter.Impl.__new__(_mesh_adapter.Impl)
+_ad.mesh = _rq
+_hdl = types.SimpleNamespace(headers={})
+_res = _ad.post("/api/mesh/hub", {"name": "Old", "remove": True, "skip_quorum": True}, {}, _hdl)
+check(isinstance(_res, dict) and "pending" in _res and not _rq.dir["Old"].get("removed"),
+      "approvals: ...not through the API either")
+_rq._exec_remove({"name": "Old"})
+check(_rq.dir["Old"].get("removed") is True, "approvals: once the quorum agrees, the hub is removed")
+
 
 class _GotoHandler:
     def __init__(self, path):

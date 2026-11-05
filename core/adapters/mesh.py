@@ -458,11 +458,10 @@ class Impl(Adapter):
             return {"ok": True, "id": rid, "label": lab, "service": entry}
         if path == "/api/mesh/hub":
             try:
-                if body.get("remove") and not body.get("skip_quorum"):
-                    return self.mesh.remove_hub(body["name"],
-                                                by=handler.headers.get("Tailscale-User-Login") or "owner")
-                return self.mesh.set_hub(body["name"], body,
-                                         by=handler.headers.get("Tailscale-User-Login") or "owner")
+                by = handler.headers.get("Tailscale-User-Login") or "owner"
+                if body.get("remove"):  # always through the approval quorum
+                    return self.mesh.remove_hub(body["name"], by=by)
+                return self.mesh.set_hub(body["name"], body, by=by)
             except KeyError:
                 return ("error", 404, "that hub is not in the directory")
         if path.startswith("/api/mesh/approvals/"):
