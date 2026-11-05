@@ -224,6 +224,27 @@ def _ts_self():
     return status, own, dns, host
 
 
+def _wait_ts_dns(slug, seconds=20):
+    """Wait until Tailscale's Self.DNSName reflects `slug` after a hostname change."""
+    from .detect import invalidate
+    want = slug.lower()
+    end = time.time() + seconds
+    last = ""
+    while True:
+        try:
+            _, _, dns, _ = _ts_self()
+            last = dns
+            if dns.split(".")[0].lower() == want:
+                invalidate("tailscale")
+                return dns
+        except Exception:
+            pass
+        if time.time() >= end:
+            break
+        time.sleep(0.5)
+    raise RuntimeError(f"Tailscale DNS name did not switch to {slug} (still {last or 'unknown'})")
+
+
 def _slugify(name):
     raw = unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode()
     raw = re.sub(r"[^a-z0-9-]+", "-", raw.lower()).strip("-")
@@ -289,13 +310,14 @@ def service_info(family: str) -> dict:
     return {"kind": "none", "name": ""}
 
 
-def _wait_hub(url, seconds=25):
+def _wait_hub(url, seconds=90):
     target = url.rstrip("/") + "/api/hub/version"
     ctx = ssl._create_unverified_context()
     end = time.time() + seconds
     while time.time() < end:
         try:
-            with urllib.request.urlopen(target, timeout=2, context=ctx) as r:
+            timeout = min(15, max(2, end - time.time()))
+            with urllib.request.urlopen(target, timeout=timeout, context=ctx) as r:
                 if r.status == 200:
                     return True
         except Exception:
@@ -1276,14 +1298,18 @@ def make_handler(core: Core):
                                 if code != 0:
                                     return self._json({"error": "tailscale hostname change failed: " + out}, 502)
                                 try:
+                                    new_dns = _wait_ts_dns(slug)
                                     _serve_restore(snapshot)
-                                    _, _, new_dns, _ = _ts_self()
                                     new_url = f"https://{new_dns}/hub/"
                                     if not _wait_hub(new_url):
                                         raise RuntimeError("the new hostname did not become healthy")
                                     changed_dns = True
                                 except Exception as e:
                                     _run_ts("set", f"--hostname={old_slug}")
+                                    try:
+                                        _wait_ts_dns(old_slug)
+                                    except Exception:
+                                        pass
                                     try:
                                         _serve_restore(snapshot)
                                         _wait_hub(f"https://{old_dns}/hub/", seconds=10)
@@ -1298,6 +1324,8 @@ def make_handler(core: Core):
                     if changed_dns and new_dns:
                         core.conf["self_dns"] = new_dns
                         core.conf["url"] = new_url
+                        if core.conf.get("self_url"):
+                            core.conf["self_url"] = new_url
                     save_conf(core.conf)
                     core.ctx["name"] = name
                     core.identity.name = name
