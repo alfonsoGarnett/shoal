@@ -554,8 +554,14 @@
     for (const h of (j.hubs || [])) {
       agents[h.name] = h;
       if (h.name) agents[String(h.name).toLowerCase()] = h;
-      if (h.dns) agents[h.dns] = h;
+      if (h.dns) agents[String(h.dns).toLowerCase()] = h;
       if (h.ip) agents[h.ip] = h;
+      // The host in the hub's URL is its device's MagicDNS name: it matches the device even when the
+      // hub has another name, and with hubs that do not send ip/dns yet.
+      try {
+        const host = new URL(h.url).hostname.toLowerCase();
+        if (host && !/^[0-9.:\[\]]+$/.test(host)) { agents[host] = agents[host] || h; agents[host.split(".")[0]] = agents[host.split(".")[0]] || h; }
+      } catch (e) { /* no URL */ }
     }
     if (data) render(data);
   }).catch(() => {});
@@ -564,7 +570,7 @@
     const ip = (p.ips || [])[0] || "";
     const you = visitor ? String(visitor.name || "").toLowerCase() === String(p.name || "").toLowerCase() : p.self;
     let st;
-    const hubOf = agents[p.name] || agents[String(p.name || "").toLowerCase()] || agents[p.dns] || (p.ips || []).map((x) => agents[x]).find(Boolean);
+    const hubOf = agents[p.name] || agents[String(p.name || "").toLowerCase()] || agents[String(p.dns || "").toLowerCase()] || (p.ips || []).map((x) => agents[x]).find(Boolean);
     const displayName = hubOf ? hubOf.name : p.name;
     if (p.self) st = you ? T("index.thisHubHere") : T("index.thisHub");
     else if (p.online) st = p.direct ? T("index.onlineDirect") : T("index.onlineRelay", { relay: esc(p.relay || "tailnet") });

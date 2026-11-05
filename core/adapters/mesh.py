@@ -61,9 +61,14 @@ class Impl(Adapter):
             return 0 if name == self.mesh.me else (round(now - t, 1) if t else None)
         return {"coordinator": v["coordinator"], "domain": v.get("domain"),
                 "version": v["release"].get("version"),
+                # ip and dns let the devices list tell which tailnet device runs which hub, also when
+                # the hub's name differs from the device's Tailscale hostname ("Galaxy Watch" on
+                # galaxy-watch).
                 "hubs": [{"name": h["name"], "kind": h.get("kind"), "os": h.get("os"), "online": h["online"],
                           "url": h.get("url"), "coordinator": h["coordinator"], "here": h["here"],
                           "domain": h.get("domain"), "ok": h.get("ok"),
+                          "ip": (self.mesh.dir.get(h["name"]) or {}).get("ip"),
+                          "dns": (self.mesh.dir.get(h["name"]) or {}).get("dns"),
                           "pub": (self.mesh.dir.get(h["name"]) or {}).get("pub"), "seen": seen(h["name"])}
                          for h in v["hubs"] if not h.get("removed") and h.get("url")]}
 

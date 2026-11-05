@@ -860,6 +860,20 @@ check(isinstance(_res, dict) and "pending" in _res and not _rq.dir["Old"].get("r
 _rq._exec_remove({"name": "Old"})
 check(_rq.dir["Old"].get("removed") is True, "approvals: once the quorum agrees, the hub is removed")
 
+# The fleet carries each hub's tailnet address and DNS name, so the devices list can match a device to its
+# hub when the names differ ("Galaxy Watch" runs on the device galaxy-watch).
+_fm = _mesh()
+_fm.dir["Galaxy Watch"] = {"name": "Galaxy Watch", "ip": "100.64.0.5", "dns": "galaxy-watch.tailnet-a.ts.net",
+                           "url": "https://galaxy-watch.tailnet-a.ts.net/hub/", "domain": "tailnet-a.ts.net"}
+_fm.view = lambda: {"coordinator": "HubA", "domain": "tailnet-a.ts.net", "release": {},
+                    "hubs": [{"name": "Galaxy Watch", "online": True, "coordinator": False, "here": False,
+                              "url": "https://galaxy-watch.tailnet-a.ts.net/hub/"}]}
+_fa = _mesh_adapter.Impl.__new__(_mesh_adapter.Impl)
+_fa.mesh = _fm
+_fh = _fa.fleet()["hubs"][0]
+check(_fh["ip"] == "100.64.0.5" and _fh["dns"] == "galaxy-watch.tailnet-a.ts.net",
+      "fleet: hubs carry their tailnet address and DNS name")
+
 
 class _GotoHandler:
     def __init__(self, path):
