@@ -1,8 +1,8 @@
-"""Tailscale Funnel gate for one public group (one or two services).
+"""Tailscale Funnel gate for public groups (each with one or two services, chosen by its token).
 
 Public ports are 8443 and 10000. Port 443 stays as the private hub. The hub
 proxies HTTP, long-lived streams and WebSocket upgrades, and puts a shared
-login page/cookie in front of both ports.
+login page/cookie in front of both ports. Several groups can share the ports.
 """
 from __future__ import annotations
 
@@ -459,13 +459,16 @@ button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:9px;backgr
     def get(self, path, query):
         if path == "/api/funnel":
             ok, node = self.allowed()
-            return {"allowed": ok, "active": self.shares.view(),
+            return {"allowed": ok, "groups": self.shares.view(),
                     "ports": list(self.PUBLIC_PORTS),
                     "enable_url": "https://login.tailscale.com/f/funnel?node=" + node}
 
     def post(self, path, body, query, handler):
         if path == "/api/funnel/stop":
-            return self.shares.stop()
+            token = body.get("token")
+            if not isinstance(token, str) or not token:  # no "stop everything": a click must name its group
+                return ("error", 400, "token required")
+            return self.shares.stop(token)
         if path == "/api/funnel/share":
             from ..server import CORE
             d = CORE.data(handler.headers.get("Host", ""))

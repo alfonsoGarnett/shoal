@@ -101,7 +101,7 @@ Rotate any key that may have been exposed. Use `state/modules/<id>.json` for mod
 
 ## Funnel
 
-- Funnel publishes up to two services from a single hub, on the public ports 8443 and 10000.
+- Funnel publishes groups of up to two services from a single hub, on the public ports 8443 and 10000. Groups share those ports, each with its own token, and a token only reaches the services of its group.
   Port 443 stays the private hub and is never made public.
 - The hub does not expose service ports directly: it is the gate and the proxy.
 - The optional login (user and PBKDF2-SHA256 password, 210 000 iterations) refuses a form body

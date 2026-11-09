@@ -507,7 +507,6 @@
   "index.publishHint": "Publish {names} together, with one link, one login and one expiry.",
   "index.groupName": "Group name",
   "index.publishForeverNote": "\"No expiry\" stays active until you press Stop.",
-  "index.publishReplace": "There is already a public group ({name}); publishing this selection replaces it.",
   "index.publishedAuth": "Both links ask for the shared login.",
   "index.selectRoute": "Select {name} for a public group",
   "index.publishActionOne": "Publish",

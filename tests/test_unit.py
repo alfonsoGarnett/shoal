@@ -1047,8 +1047,79 @@ for _route_ in ({"kind": "proxy", "path": "/hub/", "target": "http://127.0.0.1:8
     except ValueError:
         _shared = False
     check(not _shared, f"funnel: the hub itself cannot be shared ({_route_['target']}{_route_['path']})")
-_sh.active = {"token": "abc", "expires": None, "routes": []}
+_sh.groups = [{"token": "abc", "expires": None, "routes": []}]
 check(_sh.valid("ñ") is None and _sh.valid("abc") is not None, "funnel: a non-ASCII token is refused, not a crash")
+
+
+class _FakeTailscale:
+    """Stands in for subprocess.run: per-port Serve state and a version warning on stderr."""
+    def __init__(self):
+        self.web, self.calls, self.fail_on = {}, [], None
+
+    def __call__(self, args, **kw):
+        import types
+        self.calls.append(args[1:])
+        out, err, code = b"", b"", 0
+        if args[1:3] == ["serve", "status"]:
+            web = {f"h.example:{p}": {"Handlers": {"/": {"Proxy": t}}} for p, t in self.web.items()}
+            out, err = json.dumps({"Web": web}).encode(), b'Warning: client version "1" != server "2"\n'
+        else:
+            port = int(next(a for a in args if a.startswith("--https=")).split("=")[1])
+            if args[-1] == "off":
+                self.web.pop(port, None)
+            elif port == self.fail_on:
+                code, err = 1, b"funnel refused"
+            else:
+                self.web[port] = args[-1]
+        return types.SimpleNamespace(returncode=code, stdout=out, stderr=err)
+
+
+import shares as _shares_mod  # noqa: E402
+_real_run, _fake = _shares_mod.subprocess.run, _FakeTailscale()
+_shares_mod.subprocess.run = _fake
+_gdir = Path(tempfile.mkdtemp())
+_cam = {"kind": "proxy", "path": "/", "target": "http://127.0.0.1:8765", "id": "cam", "name": "Cam"}
+_vid = {"kind": "proxy", "path": "/", "target": "http://127.0.0.1:5050", "id": "vid", "name": "Vid"}
+_app = {"kind": "proxy", "path": "/", "target": "http://127.0.0.1:4319", "id": "app", "name": "App"}
+_fake.web[10000] = "http://127.0.0.1:7000"  # something the owner already served there
+_sg = Shares(_gdir, port=8795)
+_a = _sg.start([_cam, _vid], "parents", 0, "", "h.example")
+check(len(_sg.view()) == 1 and 8443 in _fake.web, "funnel: a version warning on stderr does not break publishing")
+_b = _sg.start([_app], "app", 0, "", "h.example")
+check(_a["token"] != _b["token"] and _sg.valid(_a["token"]) and _sg.valid(_b["token"]),
+      "funnel: a new group leaves the existing group and its token alone")
+check(_sg.target_for(_sg.valid(_a["token"], 8443), 8443)["id"] == "cam"
+      and _sg.target_for(_sg.valid(_b["token"], 8443), 8443)["id"] == "app",
+      "funnel: on one public port the token picks the service")
+check(_sg.valid(_b["token"], 10000) is None, "funnel: a group has no access to a port it does not map")
+_sg2 = Shares(_gdir, port=8795)
+check([g["token"] for g in _sg2.view()] == [_a["token"], _b["token"]], "funnel: every group survives a hub restart")
+_sg2.groups = []
+_oldfmt = json.loads((_gdir / "shares.json").read_text(encoding="utf-8"))
+check(_oldfmt["token"] == _a["token"] and _oldfmt["routes"], "funnel: the first group stays readable by a rolled-back hub")
+_calls = len(_fake.calls)
+check(_sg.stop(_b["token"])["stopped"] and _sg.valid(_a["token"], 8443) and 8443 in _fake.web
+      and not [c for c in _fake.calls[_calls:] if "off" in c and "--https=8443" in c],
+      "funnel: stopping a group keeps a port another group still uses")
+_sg.stop(_a["token"])
+check(_fake.web.get(10000) == "http://127.0.0.1:7000", "funnel: closing a port restores what was served there before")
+_c = _sg.start([_cam, _vid], "one", 0, "", "h.example")
+_d = _sg.start([_app, _vid], "two", 0, "", "h.example")
+_sg.stop(_c["token"])
+check(_sg.valid(_d["token"], 8443) and 8443 in _fake.web and _fake.web.get(10000) == "http://127.0.0.1:8795",
+      "funnel: the group left on the ports keeps them open")
+_sg.stop(_d["token"])
+check(not _sg.view() and not (_gdir / "shares.json").exists() and 8443 not in _fake.web
+      and _fake.web.get(10000) == "http://127.0.0.1:7000", "funnel: the last group out restores what was served before")
+_fake.fail_on = 8443
+try:
+    _sg.start([_cam], "bad", 0, "", "h.example")
+    _raised = False
+except RuntimeError:
+    _raised = True
+check(_raised and not _sg.view(), "funnel: a group that cannot open its port is not recorded")
+_fake.fail_on = None
+_shares_mod.subprocess.run = _real_run
 
 from core.adapters import monitor as _monitor  # noqa: E402
 _now = time.time()

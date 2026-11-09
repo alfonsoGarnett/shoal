@@ -291,7 +291,7 @@ enabled (subject to the quorum), and the start and end of every session are logg
 
 ## Public sharing (Funnel)
 
-Funnel publishes up to two services from one hub on the public ports **8443** and **10000**;
+Funnel publishes groups of up to two services from one hub on the public ports **8443** and **10000** (several groups share the ports; each link's token picks its service);
 port 443 stays the private hub. The hub is the gate:
 
 - a share link `/s/<token>` sets a cookie (`Secure`, `HttpOnly`, `SameSite=Lax`); the token is

@@ -79,7 +79,7 @@ Run the hub under a single supervisor loop. Do not kill the supervisor when stop
 
 Enable Funnel once in the Tailscale admin console. Then use the share controls on the index to publish a route or a group of routes.
 
-- Publishes up to two public shares from a hub on ports **8443** and **10000**; port **443** stays the private hub.
+- Publishes public groups of up to two services each, on ports **8443** and **10000**, with one link per group; port **443** stays the private hub.
 - Traffic is gated at `/s/<token>`, with an optional PBKDF2 login in front.
 - Durations range from 15 minutes to no expiry.
 - Stopping a share closes its Funnel port cleanly.

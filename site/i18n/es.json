@@ -507,7 +507,6 @@
   "index.publishHint": "Publica {names} juntos, con un enlace, un inicio de sesión y una caducidad.",
   "index.groupName": "Nombre del grupo",
   "index.publishForeverNote": "\"Sin expiración\" queda activo hasta que pulses Detener.",
-  "index.publishReplace": "Ya hay un grupo público ({name}); publicar esta selección lo reemplaza.",
   "index.publishedAuth": "Los dos enlaces piden el mismo inicio de sesión.",
   "index.selectRoute": "Seleccionar {name} para un grupo público",
   "index.publishActionOne": "Publicar",

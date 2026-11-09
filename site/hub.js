@@ -479,10 +479,10 @@
     const pub = $("#published"), list = $("#published-list"), bar = $("#share-bar");
     if (bar) bar.hidden = true;
     clearInterval(shareTimer);
-    const a = funnel.active;
-    if (!a) { if (pub) pub.hidden = true; return; }
+    const groups = funnel.groups || [];
+    if (!groups.length) { if (pub) pub.hidden = true; return; }
     if (pub) pub.hidden = false;
-    const paint = () => {
+    const card = (a) => {
       const forever = a.expires == null;
       const left = forever ? Infinity : Math.max(0, a.expires - Date.now() / 1000);
       const when = forever ? T("index.shareForever", { date: new Date(a.created * 1000).toLocaleString(I18N.locale, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) })
@@ -490,13 +490,17 @@
       const urls = (a.urls || (a.url ? [{ url: a.url, name: a.name }] : [])).map((u, i) => `
         <div class="published-url"><span>${esc(u.name || (i ? T("index.shareLink", { n: i + 1 }) : T("index.sharePortal")))}</span><code>${esc(u.url)}</code>
           <button class="icon-btn" type="button" data-copy="${esc(u.url)}" aria-label="${esc(T("index.shareCopy"))}"><i class="ph ph-copy"></i></button></div>`).join("");
-      list.innerHTML = `<article class="published-group frame"><div class="in">
+      return { left, html: `<article class="published-group frame"><div class="in">
         <div class="published-head"><div><strong>${esc(a.name)}</strong><span>${esc(when)}</span></div>
-          <button class="btn btn-ghost btn-xs" type="button" id="share-stop"><i class="ph ph-stop" aria-hidden="true"></i>${T("index.shareStop")}</button></div>
+          <button class="btn btn-ghost btn-xs" type="button" data-share-stop="${esc(a.token)}"><i class="ph ph-stop" aria-hidden="true"></i>${T("index.shareStop")}</button></div>
         ${urls}
         <p class="av-note">${esc(T("index.publishedAuth"))}</p>
-      </div></article>`;
-      if (left <= 0) loadShare();
+      </div></article>` };
+    };
+    const paint = () => {
+      const cards = groups.map(card);
+      list.innerHTML = cards.map((c) => c.html).join("");
+      if (cards.some((c) => c.left <= 0)) loadShare();
     };
     paint();
     shareTimer = setInterval(paint, 1000);
@@ -540,8 +544,7 @@
         <input id="group-name" class="group-input" maxlength="64" autocomplete="off" value="${esc(names.join(" + "))}">
         <div class="ct-row">${[[15, "index.share15"], [60, "index.share60"], [240, "index.share240"], [1440, "index.share1440"], [0, "index.share0"]].map(([m, key]) =>
           `<button class="btn ${m === 60 ? "btn-primary" : "btn-ghost"} btn-xs" type="button" data-group-min="${m}">${T(key)}</button>`).join("")}</div>
-        <p class="av-note">${T("index.publishForeverNote")}</p>
-        ${funnel.active ? `<p class="av-note">${T("index.publishReplace", { name: esc(funnel.active.name) })}</p>` : ""}`;
+        <p class="av-note">${T("index.publishForeverNote")}</p>`;
     }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("open"));
     setTimeout(() => $("#group-name")?.focus(), 150);
@@ -914,8 +917,9 @@
       if (minutes === 0 && !confirm(T("index.shareConfirmForever"))) return;
       gm.disabled = true; startGroup(minutes); return;
     }
-    if (e.target.closest("#share-stop")) {
-      fetch("api/funnel/stop", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+    const stopBtn = e.target.closest("[data-share-stop]");
+    if (stopBtn) {
+      fetch("api/funnel/stop", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: stopBtn.dataset.shareStop }) })
         .then(() => { toast(T("index.shareStopped")); loadShare(); });
       return;
     }

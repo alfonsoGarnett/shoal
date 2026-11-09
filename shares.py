@@ -1,8 +1,11 @@
-"""Publicly share a small group of services with Tailscale Funnel.
+"""Publicly share small groups of services with Tailscale Funnel.
 
-The hub is the gatekeeper. A group has one token, one expiry and one login
-session; each selected service is mapped to one of Funnel's public ports
-(8443, 10000). Port 443 is reserved for the private hub itself.
+The hub is the gatekeeper. Funnel only offers three ports and 443 is reserved
+for the private hub, so a port cannot identify a service: the link does. Each
+group has its own token and expiry and maps up to two services to the public
+ports (8443, 10000); several groups can use the same ports side by side, and
+the visitor's token decides which service answers. Stopping one group never
+touches the others.
 
 The old one-route API is kept as a compatibility wrapper for classic callers.
 """
@@ -26,18 +29,28 @@ class Shares:
         self.port = int(port or os.environ.get("HUB_PORT") or 8790)  # Funnel forwards to this hub, on its port
         self.path = state_dir / "shares.json"
         self.restore_serve = restore_serve or (lambda: None)
-        self.lock = threading.Lock()
-        self.active = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else None
+        self.lock = threading.Lock()   # the list of groups
+        self.ops = threading.Lock()    # one start/stop at a time: they change Tailscale's per-port state
+        self.groups = self._load()
         threading.Thread(target=self._expiry, daemon=True).start()
 
+    def _load(self):
+        if not self.path.exists():
+            return []
+        first = json.loads(self.path.read_text(encoding="utf-8"))
+        return [first] + first.pop("more", [])
+
     def _save(self):
-        if self.active:
-            self.path.write_text(json.dumps(self.active, ensure_ascii=False), encoding="utf-8")
+        # The first group stays at the top level: a hub rolled back to a one-group
+        # release still reads it and keeps that link working.
+        if self.groups:
+            data = {**self.groups[0], "more": self.groups[1:]}
+            self.path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         else:
             self.path.unlink(missing_ok=True)
 
     @staticmethod
-    def _run(*args, timeout=20):
+    def _run(*args, timeout=20, stdout_only=False):
         try:
             kw = {"creationflags": NO_WINDOW} if sys.platform == "win32" else {}
             r = subprocess.run(list(args), capture_output=True, timeout=timeout, **kw)
@@ -47,7 +60,8 @@ class Shares:
                     invalidate("tailscale")
                 except ImportError:
                     pass
-            return r.returncode, (r.stdout + r.stderr).decode("utf-8", "replace").strip()
+            out = r.stdout if stdout_only and r.returncode == 0 else r.stdout + r.stderr
+            return r.returncode, out.decode("utf-8", "replace").strip()
         except subprocess.TimeoutExpired as e:
             return -1, ((e.stdout or b"") + (e.stderr or b"")).decode("utf-8", "replace").strip()
 
@@ -55,12 +69,19 @@ class Shares:
         caps = list((status.get("Self") or {}).get("CapMap") or []) + list((status.get("Self") or {}).get("Capabilities") or [])
         return any("funnel" in c.lower() for c in caps)
 
+    @staticmethod
+    def _ports(group):
+        return [int(r["public_port"]) for r in group.get("routes", [])]
+
+    @staticmethod
+    def _public(group):
+        a = dict(group)
+        a["remaining"] = None if a["expires"] is None else max(0, int(a["expires"] - time.time()))
+        return a
+
     def view(self):
         with self.lock:
-            a = dict(self.active) if self.active else None
-        if a:
-            a["remaining"] = None if a["expires"] is None else max(0, int(a["expires"] - time.time()))
-        return a
+            return [self._public(g) for g in self.groups]
 
     def _disable_funnels(self, ports):
         for port in ports:
@@ -75,7 +96,7 @@ class Shares:
         every other Serve route is left alone.
         """
         ports = set(int(p) for p in ports)
-        code, out = self._run("tailscale", "serve", "status", "--json")
+        code, out = self._run("tailscale", "serve", "status", "--json", stdout_only=True)  # stderr may carry a version warning
         if code != 0:
             raise RuntimeError(out.splitlines()[0] if out else "Could not read Serve state")
         try:
@@ -100,7 +121,7 @@ class Shares:
         ports = set(int(p) for p in ports)
         for port in ports:
             self._run("tailscale", "serve", f"--https={port}", "off", timeout=15)
-        for item in sorted(backup or [], key=lambda x: (x["port"], x["path"] != "/", x["path"])):
+        for item in sorted((b for b in backup or [] if int(b["port"]) in ports), key=lambda x: (x["port"], x["path"] != "/", x["path"])):
             args = ["tailscale", "serve", "--bg", f"--https={item['port']}"]
             if item.get("path") not in (None, "", "/"):
                 args.append(f"--set-path={item['path']}")
@@ -108,7 +129,7 @@ class Shares:
             self._run(*args, timeout=15)
 
     def start(self, routes, name="", minutes=60, who="", host=""):
-        """Start one public group.
+        """Start one more public group; the groups already public are left alone.
 
         routes: list of route dicts, or one route dict for the old API.
         """
@@ -136,45 +157,41 @@ class Shares:
         if not name:
             name = " + ".join(str(r.get("name") or r.get("id") or "service") for r in routes)[:64]
 
-        # Replace an existing group atomically enough for the UI.
-        with self.lock:
-            old = self.active
-        if old:
-            self.stop("replaced")
+        with self.ops:
+            with self.lock:
+                busy = {p for g in self.groups for p in self._ports(g)}
+            fresh = [p for p in PUBLIC_PORTS[:len(routes)] if p not in busy]
+            backup = self._serve_backup(fresh) if fresh else []
+            enabled = []
+            try:
+                for port in fresh:
+                    code, out = self._run(
+                        "tailscale", "funnel", "--bg", f"--https={port}",
+                        f"http://127.0.0.1:{self.port}", timeout=15,
+                    )
+                    if code != 0:
+                        raise RuntimeError(out.splitlines()[0] if out else "Could not enable Funnel")
+                    enabled.append(port)
+            except Exception:
+                self._disable_funnels(enabled)
+                self._restore_serve(backup, enabled)
+                raise
 
-        backup = self._serve_backup(PUBLIC_PORTS)
-        token = secrets.token_urlsafe(18)
-        targets = []
-        enabled = []
-        try:
-            for port, route in zip(PUBLIC_PORTS, routes):
-                code, out = self._run(
-                    "tailscale", "funnel", "--bg", f"--https={port}",
-                    f"http://127.0.0.1:{self.port}", timeout=15,
-                )
-                if code != 0:
-                    raise RuntimeError(out.splitlines()[0] if out else "Could not enable Funnel")
-                enabled.append(port)
-                targets.append({
-                    "id": route.get("id"),
-                    "route": route.get("key") or route.get("id"),
-                    "name": route.get("name") or route.get("id"),
-                    "public_port": port,
-                    "target": route["target"],
-                    "source_port": route.get("port"),
-                })
-        except Exception:
-            self._disable_funnels(enabled)
-            self._restore_serve(backup, enabled)
-            raise
-
-        urls = [
-            {"port": t["public_port"], "name": t["name"],
-             "url": f"https://{host}:{t['public_port']}/s/{token}"}
-            for t in targets
-        ]
-        with self.lock:
-            self.active = {
+            token = secrets.token_urlsafe(18)
+            targets = [{
+                "id": route.get("id"),
+                "route": route.get("key") or route.get("id"),
+                "name": route.get("name") or route.get("id"),
+                "public_port": port,
+                "target": route["target"],
+                "source_port": route.get("port"),
+            } for port, route in zip(PUBLIC_PORTS, routes)]
+            urls = [
+                {"port": t["public_port"], "name": t["name"],
+                 "url": f"https://{host}:{t['public_port']}/s/{token}"}
+                for t in targets
+            ]
+            group = {
                 "token": token,
                 "name": name,
                 "routes": targets,
@@ -185,37 +202,52 @@ class Shares:
                 "by": who,
                 "serve_backup": backup,
             }
-            self._save()
-        return self.view()
+            with self.lock:
+                self.groups.append(group)
+                self._save()
+            return self._public(group)
 
-    def stop(self, why="stopped"):
-        with self.lock:
-            active = self.active or {}
-            had = self.active is not None
-            ports = [r["public_port"] for r in active.get("routes", [])]
-            backup = active.get("serve_backup") or []
-            self.active = None
-            self._save()
-        self._disable_funnels(ports)
-        self._restore_serve(backup, ports)
-        try:
-            self.restore_serve()
-        except Exception:
-            pass
-        return {"stopped": had, "why": why}
+    def stop(self, token, why="stopped"):
+        """Stop one group. A public port stays open while another group still uses it."""
+        with self.ops:
+            with self.lock:
+                gone = [g for g in self.groups if g["token"] == token]
+                self.groups = [g for g in self.groups if g["token"] != token]
+                in_use = {p for g in self.groups for p in self._ports(g)}
+                freed, restore = set(), []
+                for group in gone:
+                    freed.update(p for p in self._ports(group) if p not in in_use)
+                    for item in group.get("serve_backup") or []:
+                        # What was on a port before Funnel goes back when the port closes,
+                        # so a group still using the port inherits the duty.
+                        heir = next((g for g in self.groups if int(item["port"]) in self._ports(g)), None)
+                        if heir:
+                            heir.setdefault("serve_backup", []).append(item)
+                        else:
+                            restore.append(item)
+                self._save()
+            self._disable_funnels(sorted(freed))
+            self._restore_serve(restore, freed)
+            try:
+                self.restore_serve()
+            except Exception:
+                pass
+        return {"stopped": bool(gone), "why": why}
 
     def valid(self, token: str, public_port=None):
+        if not isinstance(token, str) or not token:
+            return None
         with self.lock:
-            a = self.active
-        if not a or not isinstance(token, str) or not token \
-                or not secrets.compare_digest(token.encode("utf-8"), str(a["token"]).encode("utf-8")):
-            return None
-        if a["expires"] is not None and time.time() >= a["expires"]:
-            return None
-        if public_port is not None:
-            target = next((r for r in a.get("routes", []) if int(r["public_port"]) == int(public_port)), None)
-            return a if target else None
-        return a
+            groups = list(self.groups)
+        for g in groups:
+            if not secrets.compare_digest(token.encode("utf-8"), str(g["token"]).encode("utf-8")):
+                continue
+            if g["expires"] is not None and time.time() >= g["expires"]:
+                return None
+            if public_port is not None and int(public_port) not in self._ports(g):
+                return None
+            return g
+        return None
 
     def target_for(self, share, public_port):
         for route in share.get("routes", []):
@@ -225,7 +257,8 @@ class Shares:
 
     def _expiry(self):
         while True:
-            a = self.active
-            if a and a["expires"] is not None and time.time() >= a["expires"]:
-                self.stop("expired")
+            with self.lock:
+                due = [g["token"] for g in self.groups if g["expires"] is not None and time.time() >= g["expires"]]
+            for token in due:
+                self.stop(token, "expired")
             time.sleep(10)
