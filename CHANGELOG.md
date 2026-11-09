@@ -9,6 +9,12 @@
 - **The devices list recognizes hubs whose name differs from the device's Tailscale hostname.** A hub named "Galaxy Watch" on the device `galaxy-watch` was shown with an "Install hub" button on the other hubs. The fleet now carries each hub's tailnet address and DNS name, and the page also matches by the host in the hub's URL.
 - **Renaming a hub with DNS waits for Tailscale to switch hostnames before recreating Serve routes.** Recreating `tailscale serve` before `Self.DNSName` updated (or while rolling back after a cold Let's Encrypt certificate took longer than 25 s) could leave Serve bound to the wrong hostname and the hub unreachable. Shoal now waits for the target DNS name before restoring Serve in both directions and allows 90 s for the first certificate.
 
+- **A failed Funnel publish no longer takes down what was already public.** A client/daemon version warning from Tailscale made the Serve state unreadable after the existing group had been stopped, so publishing lost the old link and created nothing. Only stdout is parsed now, and publishing no longer stops anything.
+
+### Added
+
+- **Several public Funnel groups at once.** Groups share ports 8443 and 10000; each has its own link, expiry and Stop button, and its token decides which service answers.
+
 ## 0.1.0-alpha (2026-11-03)
 
 First public alpha of **Shoal**.
